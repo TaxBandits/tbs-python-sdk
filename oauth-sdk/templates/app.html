@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+
+{% block app %}
+
+    <div class="header text-center mb-3">
+        <img src="{{ static('images/tbsLogo.png') }}" alt="tbsLogo"/>
+    </div>
+
+    {% for message in get_messages(request) %}
+        <div 
+            id="msg-{{loop.index}}" 
+            class="django-messages alert alert-{{ message.extra_tags }} alert-dismissible fade show px-3 py-1" 
+            role="alert"
+        >
+            <span class="text-center">{{ message }}</span>
+            <div class="d-inline-block float-end mt-0" role="button" onclick="$('#msg-'+'{{loop.index}}').removeClass('show')">
+                <div class="text-danger cls-btn">&times;</div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {% block content %}
+    {% endblock content %}
+
+{% endblock app %}

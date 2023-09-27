@@ -1,0 +1,244 @@
+{% extends 'app.html' %}
+
+
+{% block content %}
+
+    {{ home_scripts() }}
+    
+    <div class="container">
+        <main>
+            <div class="row">
+                <div class="col-6">
+
+                    <div class="credentials">
+
+                        <form method="post" onsubmit="$('#jws_loader').show()" action="#jws_show">
+                            <input type="hidden" name="action" value="get_jws"/>
+
+                            <div class="my-3">
+                                <label class="mb-1 ps-1 fw-bold">Client Id:</label>
+                                <input type="text" class="form-control" name="clientId" required
+                                    {% if client_id %}
+                                        value="{{ client_id }}"
+                                    {% endif %}
+                                >
+                            </div>
+
+                            <div class="my-3">
+                                <label class="mb-1 ps-1 fw-bold">Client Secret:</label>
+                                <input type="text" class="form-control" placeholder="" name="secretKey" required
+                                    {% if client_secret %}
+                                        value="{{ client_secret }}"
+                                    {% endif %}
+                                >
+                            </div>
+
+                            <div class="my-3">
+                                <label class="mb-1 ps-1 fw-bold">User Token:</label>
+                                <input type="text" class="form-control" placeholder="" name="userToken" required
+                                    {% if user_token %}
+                                        value="{{ user_token }}"
+                                    {% endif %}
+                                >
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-3" id="generate_jws">
+                                <i class="fa fa-spinner fa-spin" id="jws_loader" style="display: none;"></i>
+                                <span>Generate JWS</span>
+                            </button>
+                        </form>
+
+                    </div>
+
+                    {% if jws_token %}
+
+                        <div class="jws">
+                            <div class="mt-3">
+
+                                <div class="d-flex align-items-center justify-content-between mt-3">
+                                    <p id="jws_show" class="fw-bold mb-0">JSON WEB SIGNATURE:</p>
+                                    <button type="button" class="btn btn-blue" 
+                                        onclick="copy_text('jws_token', this)"
+                                    >
+                                        <i class="fa fa-clipboard"></i>
+                                        <span id="btn_text_jws">Copy</span>
+                                    </button>
+                                </div>
+                
+                                <div class="bg-light-blue p-3 mt-3">
+                                    <label class="text-break w-100" id="jws_token">{{ jws_token }}</label>
+                                </div>
+                
+                                <form method="post" onsubmit="$('#jwt_loader').show()" action="#jwt_show">
+                                    <input type="hidden" name="action" value="get_jwt"/>
+                                    <button type="submit" class="btn btn-primary mt-3">
+                                        <i class="fa fa-spinner fa-spin" id="jwt_loader" style="display: none;"></i>
+                                        Get JWT
+                                    </button>
+                                </form>
+
+                            </div>
+                        </div>
+                
+                    {% endif %}
+
+                    {% if jwt_token %}
+
+                        <div class="jwt" id="jwt_show">
+
+                            <div class="border border-warning p-2 rounded mt-3">
+                                <div class="note"><b>Note:</b> Generated JWT will expire in 1 hour</div>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between mt-3">
+                                <p class="fw-bold mb-0">JSON WEB TOKEN:</p>
+                                <button type="button" class="btn btn-blue"
+                                    onclick="copy_text('jwt-token', this)"
+                                >
+                                    <i class="fa fa-clipboard"></i>
+                                    <span >Copy</span>
+                                </button>
+                            </div>
+
+                            <div class="bg-light-blue p-3 mt-3">
+                                <label class="text-break w-100" id="jwt-token">{{ jwt_token }}</label>
+                            </div>
+
+                            <form method="post" onsubmit="$('#verify_jwt_loader').show()" action="#verify_table">
+                                <input type="hidden" name="action" value="verify"/>
+                                <button type="submit" class="btn btn-primary mt-3">
+                                    <i class="fa fa-spinner fa-spin" id="verify_jwt_loader" style="display: none;"></i>
+                                    <span>Verify JWT</span>
+                                </button>
+                            </form>
+
+                        </div>
+                        
+                    {% endif %}
+
+                </div>
+
+                <div class="col-6">
+                    <div class="instructions shadow bg-light-blue p-3">
+                        <p class="infoTitle fw-bold">Instructions to get user credentials</p>
+                        <ol>
+                            <li>Login/Signup to TBS API Sandbox Console Site using below link <br/><span><a
+                                    href="https://sandbox.taxbandits.com/" target="_blank">Click here</a></span>
+                            </li>
+                            <br/>
+                            <li>After login, navigate to Settings &#8594; API Credentials</li>
+                            <br/>
+                            <span><img src="{{ static('images/consoleApp.png') }}" alt="consoleApp" width={400}
+                                       class="img-fluid"/></span><br/><br/>
+                            <li>Within API Credentials you'll get credentials needed for generating JWS key</li>
+                        </ol>
+                        <p class="ref">For more reference look into <span>
+                            <a href="https://developer.taxbandits.com/docs/intro/" target="_blank">developer.taxbandits.com</a></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% if jwt_token %}
+
+                <div class="mt-3">
+                    <div>
+                        <label class="fw-bold">API Version</label>: 1.7.3
+                        <br/>
+                        <label class="fw-bold">Sandbox API URL</label>:
+                        https://testapi.taxbandits.com/V1.7.3/
+                        <br/>
+                        <label class="fw-bold"> Create Business Method </label>: Business/Create
+                        <br/>
+                        <label class="fw-bold">List Business Method</label>: Business/List
+                    </div>
+                    <div class="note mt-3"><b>Note:</b> By Clicking in verify JWT Button, we will do the
+                        following functionalities to verify your JWT.
+                    </div>
+            
+                    <ol class="mt-3">
+                        <li>
+                            If you already have business, list of business is shown below by requesting.
+                        </li>
+                        <li>
+                            If you already don't have any business, a new business is created by requesting
+                            Business/Create and shown below by requesting Business/List.
+                        </li>
+                    </ol>
+                </div>
+                <p id="verify_table">Table will be shown here.</p>
+
+            {% endif %}
+
+            {% if business_table %}
+
+                <div class="response-table">
+                    <table class="table table-striped mt-4 table-bordered">
+
+                        {% 
+                            set table_header = [
+                                {'label': 'BusinessId', 'key': 'BusinessId'}, 
+                                {'label': 'BusinessName', 'key': 'BusinessNm'}, 
+                                {'label': 'Email', 'key': 'Email'}
+                            ]
+                        %}
+
+                        <thead>
+                            <tr>
+                                {% for th in table_header %}
+                                    <th>{{ th['label'] }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            {% for row in business_table %}
+                                <tr>
+                                    {% for th in table_header %}
+                                        <td>{{ row[th['key']] }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <form method="post" onsubmit="$('clear_all_loader').show()">
+                    <input type="hidden" name="action" value="clear_all"/>
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="fa fa-spinner fa-spin" id="clear_all_loader" style="display: none;"></i>
+                        <span>Clear All</span>
+                    </button>
+                </form>
+
+            {% endif %}
+            
+        </main>
+    </div>
+{% endblock content %}
+
+{% macro home_scripts() %}
+    <script>
+        function copy_text(copytext_tag_id, copy_btn){
+
+            span_tag = $(copy_btn).find('span')[0]
+            icon_tag = $(copy_btn).find('i')[0]
+
+            copy_text_to_clipboard(copytext_tag_id, (tof)=>{
+                if(tof) {
+                    span_tag.innerText = 'Copied'
+                    $(icon_tag).attr('class', 'fa fa-thumbs-up')
+                    copy_btn.style.background = '#9bff008f'
+                    copy_btn.style.border = '#9bff008f'
+                }
+
+                setTimeout(()=>{
+                    span_tag.innerText = 'Copy'
+                    $(icon_tag).attr('class', 'fa fa-clipboard')
+                    copy_btn.style.background = ''
+                    copy_btn.style.border = ''
+                }, 500)
+            })
+        }
+    </script>
+{% endmacro %}
