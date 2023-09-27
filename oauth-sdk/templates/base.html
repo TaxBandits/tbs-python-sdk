@@ -1,0 +1,25 @@
+{% import 'requirements.html' as reqs %}
+
+
+<html>
+    <head>
+        <link rel="icon" href="{{ static('images/favicon.ico') }}">
+        <title>Taxbandits OAUTH API SDK</title>
+
+        {{ reqs.bootstrap5() }}
+        {{ reqs.font_awesome4() }}
+        {{ reqs.jQuery3() }}
+        
+        <link href="{{ static('css/common.css') }}" rel="stylesheet">
+
+    </head>
+    <body>
+
+        {% block app %}
+        {% endblock app %}
+
+        <script src="{{ static('js/common.js') }}"></script>
+        <script src="{{ static('js/document_init.js') }}"></script>
+
+    </body>
+</html>

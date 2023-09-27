@@ -1,0 +1,22 @@
+{% extends 'app.html' %}
+
+{% import 'components/business_form.html' as b_form %}
+
+
+{% block content %}
+    <div class="container">
+        {{ 
+            b_form.dom(
+                title = "Update Business Details",
+                csrf_token = csrf_token,
+                form_data = form_data,
+                btn_label = "Update Business",
+                btn_urls = {
+                    "submit_btn": url("update-business", kwargs={'b_id': form_data['BusinessId']}),
+                    "back_btn": url("list-business")
+                }, 
+                api_res = api_res,
+            ) 
+        }}
+    </div>
+{% endblock content %}
