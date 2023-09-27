@@ -1,0 +1,26 @@
+# Migrations
+**/migrations/**
+!**/migrations
+!**/migrations/__init__.py
+
+# Environments9
+env/
+venv/
+venv311/
+ENV/
+env.bak/
+venv.bak/
+
+
+### Django ###
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# Visual Studio Code # 
+.vscode/
