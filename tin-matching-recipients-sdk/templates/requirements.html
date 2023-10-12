@@ -1,0 +1,21 @@
+{% macro bootstrap5() %}
+    <link href="{{ static('libraries/bootstrap5/bootstrap.min.css') }}" rel="stylesheet">
+    <script src="{{ static('libraries/bootstrap5/bootstrap.bundle.min.js') }}"></script>
+{% endmacro %}
+
+{% macro font_awesome4() %}
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+    <link rel="stylesheet" href="{{ static('libraries/font-awesome-4.7.0/css/font-awesome.css') }}">
+{% endmacro %}
+
+{% macro jQuery3() %}
+    <script src="{{ static('libraries/jQuery3/jquery.min.js')}}"></script>
+{% endmacro %}
+
+{% macro google_fonts() %}
+    <link href="{{ static('libraries/google-fonts/font.css') }}" rel='stylesheet' type='text/css' />
+{% endmacro %}
+
+{% macro material_design_icons() %}
+    <link href="{{ static('libraries/icons-mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
+{% endmacro %}

@@ -1,0 +1,97 @@
+{% extends 'app.html' %}
+
+
+{% block content %}
+    <div class="container p-5">
+
+
+        {% if Businesses %}
+
+            {% 
+                set table_headers = [
+                    {'label': 'Business Id', 'key': 'BusinessId'}, 
+                    {'label': 'Business Name', 'key': 'BusinessNm'}, 
+                    {'label': 'Email', 'key': 'Email'}
+                ]
+            %}
+
+            <div class="response-table">
+
+                <div>
+                    <div class='d-flex align-items-center justify-content-between'>
+                        <div>
+                            <h1 class='head-1'>List Businesses Details</h1>
+                            <div class="heading-bottom-line position-relative pb-0  mb-3"></div>
+                        </div>
+
+                        <a class="btn btn_primary mx-2" href="{{ url('create-business') }}">
+                            Create Business
+                        </a>
+
+                    </div>
+                </div>
+                
+                <table class="table_component table mt-2 table-bordered rounded-0">
+        
+                    <thead>
+                        <tr>
+                            {% for th in table_headers %}
+                                <th class="text-center">{{ th.label }}</th>
+                            {% endfor %}
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody>
+        
+                        {% for row in Businesses %}
+                            <tr>
+                                {% for th in table_headers %}
+                                    <td class="text-nowrap">{{ row[th.key] }}</td>
+                                {% endfor %}
+                                <td class="text-center d-flex flex-row justify-content-center">
+
+                                    {% 
+                                        set req_url_kwargs = { 
+                                            'b_id': row['BusinessId'],
+                                            'b_name': row['BusinessNm'],
+                                            'b_tin': row['EINorSSN'],
+                                        }
+                                    %}
+
+                                    <a href="{{ url('tin-match-request', kwargs=req_url_kwargs) }}" class="btn btn-primary status-btn btn_smm me-2 text-nowrap">
+                                        Request TIN Match
+                                    </a>
+                                    <a href="{{ url('list-request-records', kwargs=req_url_kwargs) }}" class="btn btn-primary status-btn btn_smm me-2 text-nowrap">
+                                        List Request
+                                    </a>
+
+                                </td>
+                            </tr>
+                        {% endfor %}
+        
+                    </tbody>
+        
+                </table>
+            </div>
+
+        {% else %}
+            <div class='container mx-auto mt-5' id="emptyCreateBusinessDiv">
+                <div class="text-center">
+                    <p>
+                        Before you submit TIN requests in your TaxBandits account, you should have atleast one Business in your
+                        account. To add a new business, click 'Create Business' button below. 
+                    </p>
+
+                    <a class="btn btn_primary shadow btn_md mx-2" href="{{ url('create-business') }}">Create Business</a>
+                </div>
+            </div>
+        {% endif %}
+        
+        <a href="{{ url('home') }}">
+            <button class="btn_back mt-3 mb-3" >
+                Back
+            </button>
+        </a>
+    </div>
+{% endblock content %}

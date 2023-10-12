@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+
+{% block app %}
+
+    <div class="app bg-light-blue h-100vh">
+        <div class="row justify-content-center">
+            <div class="col-md-12 text-center mt-3">
+                <img src="{{ static('images/tbslogo.png') }}" alt="TaxBandits Logo" class="mb-5 logo">
+                <h3>TIN Matching Recipients</h3>
+            </div>
+
+            
+            <div class="col-md-4 col-lg-4 mt-4">
+                <div>
+                    <div class="shadow rounded p-4 bg-white card-box  position-relative">
+                        <img class="top-eye-icon" src="{{ static('images/shape-4.png') }}" alt="TaxBandits"/>
+                        <div class="text-center grediant-bg">
+                            <img src="{{ static('images/tinMatch.png') }}" class=" w-70px" alt="TIN Match"/>
+                        </div>
+    
+                        <p class="mt-3 mb-0 text-start">
+                            Use this endpoint to verify the TINs against the records maintained
+                            by the Internal Revenue Service (IRS).
+                            TaxBandits will assign a unique RecordId for each of the TIN Match requests. You can use the
+                            RecordIds to get the TIN matching statuses.
+                        </p>
+    
+                        <div class="text-center mt-4">
+                            <a class="btn btn_primary mx-2" href="{{ url('list-business') }}">Request TIN Match</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+{% endblock app %}

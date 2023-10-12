@@ -1,0 +1,374 @@
+{% extends 'app.html' %}
+
+{% import 'components/popup.html' as popup %}
+
+{% block content %}
+
+    {{ scripts() }}
+
+    {% 
+        set req_url_kwargs = { 
+            'b_id': business_id,
+            'b_name': business_name,
+            'b_tin': business_tin
+        }
+    %}
+
+    <div class="container mt-5">
+        <div class="fs-20 text-dark text-center">
+            <h4 class="head-1 fw-bolder">Request TIN Matching</h4>
+        </div>
+
+
+        <div class="d-flex  align-items-center fs-20 text-dark justify-content-between">
+            <div>
+                <h4 class="head-1 me-3 fw-bolder d-inline-block" id="hBusinessName">
+                    {{ business_name }}
+                </h4>
+                <span class="text-muted fs-14" id="spanEinOrSnn">( SSN : {{ business_tin }} )</span>
+            </div>
+
+            <a href="{{ url('list-request-records', kwargs=req_url_kwargs) }}" class="btn btn_primary mx-2">
+                List Requests
+            </a>
+        </div>
+        <div class="heading-bottom-line position-relative pb-0  mb-3"></div>
+    
+        <div class="fs-6 mb-2 mt-1">
+            <b>Note:</b> In Sandbox, any TINs that ends with three zeros will return the status
+            as "Failed". The status of all other TINs will be "Success"
+        </div>
+
+        {% set form_onsumbit_url = url('tin-match-request', kwargs=req_url_kwargs) %}
+
+        <form id="form-request" onsubmit="request_form_submit('form-request', '{{form_onsumbit_url}}', '{{ csrf_token }}');return false;" >
+            
+            <div class="table-cover">
+                <table class="table mt-4 table-bordered text-center" id="Requests_table">
+                    <thead>
+                        <tr class="bg-gray">
+                            <th lass="fw-500 text-dark" scope="col">S.No</th>
+                            <th lass="fw-500 text-dark" scope="col">
+                                <span class="text-danger">*</span>
+                                Sequence Id
+                            </th>
+                            <th lass="fw-500 text-dark" scope="col">
+                                <span class="text-danger">*</span>
+                                Recipient Name
+                            </th>
+                            <th lass="fw-500 text-dark" scope="col">
+                                <span class="text-danger">*</span>
+                                TIN Type
+                            </th>
+                            <th lass="fw-500 text-dark" scope="col">
+                                <span class="text-danger">*</span>
+                                TIN
+                            </th>
+                            <th lass="fw-500 text-dark" scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if form_data %}
+                            {% for fd in form_data["TINMatchingDetails"]["Recipients"] %}
+                                <tr class="align-middle table_row">
+                                    <td class="text-center row-count">{{loop.index}}</td>
+                                    <td>
+                                        <input type="text" class="form-control" name="SequenceId" placeholder="Sequence Id" value="{{fd.SequenceId}}">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control" name="Name" placeholder="Recipient Name" value="{{fd.Name}}">
+                                    </td>
+                                    <script>
+                                        function select_option_for_selectTag(selectTag, value){
+                                            console.log('tr in select_option_for_selectTag', selectTag, value);
+                                            selectTag.value = value
+                                        }
+
+                                        $(()=>{
+                                            var tt_value = '{{ fd.TINType }}'
+                                            
+                                            setTimeout(() => {
+                                                select_option_for_selectTag(
+                                                    selectTagId='tintype-{{loop.index}}', 
+                                                    tt_value
+                                                )
+                                            }, 150)
+                                        })
+                                    </script>
+                                    <td>
+                                        <select name="TINType" id="tintype-{{loop.index}}" class="form-control form-select" style="width: 105px;margin-right: -10px;">
+                                            <option disabled selected value="">TIN Type</option>
+                                            <option value="EIN">EIN</option>
+                                            <option value="SSN">SSN</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control" name="TIN" placeholder="TIN" value="{{fd.TIN}}">
+                                    </td>
+
+                                    {% if loop.index == 2 %}
+                                        <script>
+                                            $(()=>{
+                                                $('.delete-bin-btn').show()
+                                            })
+                                        </script>
+                                    {% endif %}
+                                    <td>
+                                        <button type="button" class="delete-bin-btn btn-rounded-hover rounded-circle p-2 lh-1" 
+                                            onclick="removeRow(this)"
+                                            style="display: none;"
+                                        >
+                                            <i class="mdi mdi-delete-outline text-muted fs-4" data-bs-toggle="tooltip" data-bs-placement="bottom" role="button" aria-label="delete" data-bs-original-title="delete" title="Delete"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+
+                            <tr class="align-middle table_row">
+                                <td class="text-center row-count">1</td>
+                                <td>
+                                    <input type="text" class="form-control" id="floatingInput" name="SequenceId" placeholder="Sequence Id" value="">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" id="floatingInput" name="Name" placeholder="Recipient Name" value="">
+                                </td>
+                                <td>
+                                    <select name="TINType" class="form-control form-select">
+                                        <option disabled selected value="">TIN Type</option>
+                                        <option value="EIN">EIN</option>
+                                        <option value="SSN">SSN</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" id="floatingInput" name="TIN" placeholder="TIN" value="">
+                                </td>
+                                <td>
+                                    <button type="button" class="delete-bin-btn btn-rounded-hover rounded-circle p-2 lh-1" 
+                                        onclick="removeRow(this)"
+                                        style="display: none;"
+                                    >
+                                        <i class="mdi mdi-delete-outline text-muted fs-4" data-bs-toggle="tooltip" data-bs-placement="bottom" role="button" aria-label="delete" data-bs-original-title="delete" title="Delete"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                        {% endif %}
+
+                    </tbody>
+                    <tr class="btn-row-tr">
+                        <td colspan="6">
+                            <button type="button" class="btn-rounded-hover rounded-circle lh-1 ms-2 float-start"
+                                onclick="addRow()"
+                            >
+                                <i class="mdi mdi-plus-circle-outline text-muted fs-4" data-bs-toggle="tooltip" data-bs-placement="bottom" role="button" aria-label="delete" data-bs-original-title="Add" title="Add"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </div>
+
+            <div class="row">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a class='btn_back text-decoration-none btn-md fw-500' href="{{ url('list-business') }}">
+                        Back
+                    </a>
+                    <button type="submit" 
+                        class='btn btn_primary btn-md fw-500 text-white' 
+                        
+                        id="btnCreateRequest"
+                    >
+                        <i style="display:none" class="fa fa-spinner fa-spin" id="submitRequestProgressBar"></i>
+                        Submit
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="api-response-popup">
+            {% if api_res %}
+                <script>
+                    $(()=>{
+                        $('#tinStatusModalToggle').modal('show')
+                    })
+                </script>
+            {% endif %}
+            
+            {% call(content) popup.dom(id='tinStatusModalToggle') %}
+                {% if content == 'header' %}
+                    <h5 class="modal-title" id="exampleModalToggleLabel">TIN Matching Response</h5>
+                {% endif %}
+
+                {% if content == 'body' %}
+                    <div>
+                        <div>
+                            <div class="form-label fw-500 text-muted mb-0">Business Id</div>
+                            <div class=" text-dark fw-500 mb-3">{{ api_res.BusinessId }}</div>
+                        </div>
+
+                        {% set records = api_res.TINMatchingRecords %}
+
+                        {% if 'SuccessRecords' in records and records.SuccessRecords %}
+                            <div class="border border-1 rounded">
+                                <div class="d-flex justify-content-between align-items-center px-3 rounded-top light-gray-bg">
+                                    <div class="fs-5 mb-1 fw-bold">Success Records</div>
+                                    <div class="px-0 me-2"></div>
+                                </div>
+                                <div class="row pb-3 ps-4">
+                                    <div class="border-bottom row py-3">
+                                        <div class="col-6 ps-lg-4">
+                                            <div class="form-label fw-500 text-muted mb-0">Submission Id</div>
+                                            <div class="text-dark fw-500">c2ec8666-eae2-49fb-8591-2a4252ee2cd9</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr class="fw-600 ">
+                                            <th class="text-center fw-600" width="30%">Sequence Id</th>
+                                            <th class="text-center" width="35%">Status</th>
+                                            <th class="text-center" width="35%">Record Id</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for s_rec in records.SuccessRecords %}
+                                            <tr>
+                                                <td class="taL">{{ s_rec.SequenceId }}</td>
+                                                <td class="taL">{{ s_rec.Status }}</td>
+                                                <td class="taL">{{ s_rec.RecordId }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+
+                        {% if 'ErrorRecords' in records and records.ErrorRecords %}
+                            <div>
+                                <h2 class="tabel-sub-head">Error Records</h2>
+                                {% for e_rec in records.ErrorRecords %}
+                                    <div class="form-label fw-500 text-muted mt-2">
+                                        Sequence Id : <span class="text-dark fw-500 mb-3">{{ e_rec.SequenceId }}</span>
+                                    </div>
+                                    <table>
+                                        <thead>
+                                            <tr class="fw-600">
+                                                <th class="text-center fw-600" width="30%">Id</th>
+                                                <th class="text-center" width="35%">Name</th>
+                                                <th class="text-center" width="35%">Message</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for err in e_rec.Errors %}
+                                                <tr>
+                                                    <td class="text-center align-top">{{ err.Id }}</td>
+                                                    <td class="text-center align-top">{{ err.Name }}</td>
+                                                    <td class="text-center border-radious-bottom-right align-top">
+                                                        {{ err.Message }}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endcall %}
+        </div>
+
+    </div>
+{% endblock content %}
+
+{% macro scripts() %}
+
+    <script>
+        function request_form_submit(form_id, submit_url, csrf_token){
+            
+            form_tag = document.getElementById(form_id)
+            tbody_tag = $(form_tag).find('tbody')[0]
+            table_rows = $(tbody_tag).find('tr')
+
+            ret_list = []
+            Array.from(table_rows).forEach((tr)=>{
+                console.log('tr', tr);
+
+                ret_list.push({
+                    seqId: $(tr).find('input[name="SequenceId"]').val(),
+                    name: $(tr).find('input[name="Name"]').val(),
+                    tinType: $(tr).find('select[name="TINType"]').val(),
+                    tinValue: $(tr).find('input[name="TIN"]').val()
+                })
+            })
+
+            console.log('ret_list', ret_list);
+            form_tag = document.createElement('form')
+            form_tag.style.display = 'none'
+            form_tag.method = 'post'
+            form_tag.onsubmit = submit_url
+
+            input_csrf = document.createElement('input')
+            input_csrf.name = 'csrfmiddlewaretoken'
+            input_csrf.value = csrf_token
+
+            input1 = document.createElement('input')
+            input1.name = "ArrayOfData"
+            input1.value = JSON.stringify(ret_list)
+
+            form_tag.append(input_csrf)
+            form_tag.append(input1)
+            document.body.appendChild(form_tag)
+            form_tag.submit()
+
+            return false
+        }
+    </script>
+
+    <script>
+
+        function addRow(){
+
+            table_body = $('#Requests_table').find('tbody')[0]
+            table_row = $(table_body).find('tr')[0]
+
+            next_row = table_row.cloneNode(true)
+            $(next_row).find('input').val('')
+            
+            table_body.append(next_row)
+
+            $('.delete-bin-btn').show()
+
+            row_number_organizer()
+
+        }
+
+        function removeRow(rmBtn){
+
+            table_row = $(rmBtn).closest('.table_row')
+            table_row.remove()
+            
+            number_of_rows = row_number_organizer()
+
+            if(number_of_rows == 1){
+                $('.delete-bin-btn').hide()
+            }
+        }
+
+        function row_number_organizer(){
+
+            table_body = $('#Requests_table').find('tbody')[0]
+            table_rows = $(table_body).find('tr')
+
+            Array.from(table_rows).forEach((tr, idx)=>{
+                row_no = idx+1
+                row_count_td = $(tr).find('.row-count')
+                row_count_td.text(row_no)                
+            })
+
+            return table_rows.length
+        }
+    
+    </script>    
+{% endmacro %}

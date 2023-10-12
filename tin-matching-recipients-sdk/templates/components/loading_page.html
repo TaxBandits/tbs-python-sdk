@@ -1,0 +1,52 @@
+{% macro dom() %}
+
+    <div class='loading_page text-center' id="pageProgressBar" style="display:none">
+        <div class="position-fixed w-100 h-100 d-flex align-items-center justify-content-center z-index-9999">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+{% endmacro %}
+
+{% macro styles() %}
+
+    <style>
+        .loading_page {
+            background-color: #f0f8ffb0;
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+    
+{% endmacro %}
+
+{% macro scripts() %}
+
+    <script>
+        // show the loader when the page is loading...
+        window.addEventListener("beforeunload", ()=>{
+            console.log('loading...');
+            $('.loading_page').show();
+        });
+
+        // hide the loader when the page is ready
+        document.addEventListener('readystatechange', (event)=>{
+            if(event.target.readyState === 'complete'){
+                $('.loading_page').hide();
+            }
+        })
+        window.addEventListener('pageshow', (event)=>{
+            if(event.persisted){
+                $('.loading_page').hide();
+            }
+        })
+    </script>
+    
+{% endmacro %}
