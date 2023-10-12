@@ -7,7 +7,7 @@ To check out the complete list of forms we support, [visit here](https://develop
 Jump To
 - [OAuth SDK](https://github.com/TaxBandits/tbs-python-sdk/tree/main/oauth-sdk)
 - [Business SDK](https://github.com/TaxBandits/tbs-python-sdk/tree/main/business-sdk)
-
+- [TIN Matching Recipient SDK](https://github.com/TaxBandits/tbs-python-sdk/tree/main/tin-matching-recipients-sdk)
 ## Getting Started
 
 ### Installing
