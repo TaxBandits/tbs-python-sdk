@@ -1,0 +1,265 @@
+{% extends 'app.html' %}
+
+{% import 'components/popup.html' as popup %}
+
+
+{% block content %}
+
+    {% 
+        set req_url_kwargs = { 
+            'b_id': business_id,
+            'b_name': business_name,
+            'b_tin': business_tin,
+        }
+    %}
+
+    <div class="container">
+        <div class="fs-20 text-dark text-center">
+            <h4 class="head-1 fw-bolder">List of TIN Matching Recipients</h4>
+        </div>
+
+        <div class="d-flex  align-items-center fs-20 text-dark justify-content-between">
+            <div>
+                <h4 class="head-1 me-3 fw-bolder d-inline-block" id="hBusinessName">
+                    {{ business_name }}
+                </h4>
+                <span class="text-muted fs-14" id="spanEinOrSnn">( SSN : {{ business_tin }} )</span>
+            </div>
+
+            {% if request_records_list %}                
+                <a class="btn btn_primary mx-2" href="{{ url('tin-match-request', kwargs=req_url_kwargs) }}">
+                    Create TIN Match Request
+                </a>
+            {% endif %}
+
+        </div>
+        <div class="heading-bottom-line position-relative pb-0  mb-3"></div>
+
+        {% if request_records_list %}
+            <div class="overflow-auto h-50" >
+                <table class="table mt-4 table-bordered text-center" id="Requests_table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>SequenceId</th>
+                            <th>SubmissionId</th>
+                            <th>RecordId</th>
+                            <th>TIN Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for r_rec in request_records_list %}
+                            <tr>
+                                <td class="taL">{{ loop.index }}</td>
+                                <td class="taL">{{ r_rec.SequenceId }}</td>
+                                <td class="taL">{{ r_rec.SubmissionId }}</td>
+                                <td class="taL">{{ r_rec.RecordId }}</td>
+                                <td class="taL">{{ r_rec.Status }}</td>
+
+                                <td class="text-center d-flex flex-row justify-content-center">
+
+                                    {% 
+                                        set url_kwargs = {
+                                            'b_id': business_id,
+                                            'b_name': business_name,
+                                            'b_tin': business_tin,
+                                            'sub_id': r_rec.SubmissionId, 
+                                            'rec_id': r_rec.RecordId
+                                        } 
+                                    %}
+
+                                    <div class="col-6 me-1">
+                                        <form method="post" action="{{ url('get-request', kwargs=url_kwargs) }}">
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                            <input type="hidden" name="action" value="status">
+                                            <button type="submit" class="btn btn-primary status-btn btn_smm">
+                                                Get Status
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div class="col-6 me-2">
+                                        <form method="post" action="{{ url('get-request', kwargs=url_kwargs) }}">
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                            <input type="hidden" name="action" value="cancel">
+                                            <button type="submit" class="btn_cancel btn_smm1">
+                                                <span class="mdi mdi-close pe-1"></span>
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center">
+                <p>There are no TIN Match requests for this Business(Hello Technology). To submit new TIN Match requests, click 'Request TIN Match Button'</p>
+                <a href="{{ url('tin-match-request', kwargs=req_url_kwargs) }}" class="btn btn_primary shadow btn_md">
+                    Request TIN Match
+                </a>
+            </div>
+        {% endif %}
+
+        <a href="{{ url('list-business') }}">
+            <button class="btn_back mt-3 mb-3" >
+                Back
+            </button>
+        </a>
+
+        <div class="api-responses-popups">
+            {% if request_record_status %}
+                <div>
+                    <script>
+                        $(()=>{
+                            $('#tinStatusModalToggle').modal('show')
+                        })
+                    </script>
+                    
+                    {% call(content) popup.dom(id='tinStatusModalToggle', width="528px", top="45px") %}
+                    
+                        {% if content == 'header' %}
+                            <h5 class="modal-title changed" id="exampleModalToggleLabel">Get TIN Matching Status</h5>
+                        {% endif %}
+
+                        {% if content == 'body' %}
+                            <div class="table-container m-3">
+                
+                                {% 
+                                    set t_configs = [
+                                        {'h': 'SubmissionId', 'k': 'SubmissionId' },
+                                        {'h': 'RecordId', 'k': 'RecordId' },
+                                        {'h': 'SequenceId', 'k': 'SequenceId' },
+                                        {'h': 'RecipientId', 'k': 'RecipientId' },
+                                        {'h': 'Name', 'k': 'Name' },
+                                        {'h': 'TIN Type', 'k': 'TINType' },
+                                        {'h': 'TIN', 'k': 'TIN' },
+                                        {'h': 'Status', 'k': 'Status' },
+                                        {'h': 'StatusTs', 'k': 'StatusTs' },
+                                        {'h': 'NumOfAttemptsRmng', 'k': 'NumOfAttemptsRmng' }
+                                    ]
+                                %}
+
+                                <table>
+                                    <tbody>
+                                        {% for conf in t_configs %}
+                                            <tr class="fw-600 ">
+                                                <th class="taL bg-white border">{{ conf.h }}</th>
+                                                <td class="taL">{{ request_record_status[conf.k] }}</td>
+                                            </tr>                                        
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+
+                    {% endcall %}
+                </div>
+            {% endif %}
+
+            {% if request_record_cancel %}
+                <div>
+                    <script>
+                        $(()=>{
+                            $('#tinCancelModalToggle').modal('show')
+                        })
+                    </script>
+                    
+                    {% call(content) popup.dom(id='tinCancelModalToggle', width="528px", top="45px") %}
+                    
+                        {% if content == 'header' %}
+                            <h5 class="modal-title changed" id="exampleModalToggleLabel">Cancel TIN Matching</h5>
+                        {% endif %}
+
+                        {% if content == 'body' %}
+
+                            {% if request_record_cancel.TINMatchingRecords.SuccessRecords %}
+                                <div class="success-content">
+                                    <h2 class="tabel-sub-head">Success Records</h2>
+                                    <div class="table-container m-3">
+
+                                            {% 
+                                                set t_configs = [
+                                                    {'h': 'SequenceId', 'k': 'SequenceId' },
+                                                    {'h': 'RecordId', 'k': 'RecordId' },
+                                                    {'h': 'Status', 'k': 'Status' },
+                                                    {'h': 'StatusTs', 'k': 'StatusTs' }
+                                                ]
+                                            %}
+
+                                            {% set successRecord = request_record_cancel.TINMatchingRecords.SuccessRecords[0] %}
+
+                                            <table>
+                                                <tbody>
+                                                    {% for conf in t_configs %}
+                                                        <tr class="fw-600">
+                                                            <th class="taL bg-white border">{{ conf.h }}</th>
+                                                            <td class="taL">{{ successRecord[conf.k] }}</td>
+                                                        </tr>                                        
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if request_record_cancel.TINMatchingRecords.ErrorRecords %}
+
+                                <div class="error-content">
+                                    <h2 class="tabel-sub-head">Error Records</h2>
+                                    <div class="table-container m-3">
+                        
+                                        {% 
+                                            set r_configs = [
+                                                {'h': 'SequenceId', 'k': 'SequenceId' },
+                                                {'h': 'RecordId', 'k': 'RecordId' },
+                                                {'h': 'Requested Type', 'k': 'RequestedType' }
+                                            ]
+                                        %}
+
+                                        {% 
+                                            set e_configs = [
+                                                {'h': 'Id', 'k': 'Id' },
+                                                {'h': 'Name', 'k': 'Name' },
+                                                {'h': 'Message', 'k': 'Message' }
+                                            ]
+                                        %}
+
+                                        {% set errorRecord = request_record_cancel.TINMatchingRecords.ErrorRecords[0] %}
+
+                                        <table>
+                                            <tbody>
+                                                {% for conf in r_configs %}
+                                                    <tr class="fw-600">
+                                                        <th class="taL bg-white border">{{ conf.h }}</th>
+                                                        <td class="taL">{{ errorRecord[conf.k] }}</td>
+                                                    </tr>                                        
+                                                {% endfor %}
+                                                {% for conf in e_configs %}
+                                                    <tr class="fw-600">
+                                                        <th class="taL bg-white border">{{ conf.h }}</th>
+                                                        <td class="taL">{{ errorRecord.Errors[0][conf.k] }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                </div>
+
+                            {% endif %}
+
+                        {% endif %}
+                    {% endcall %}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+{% endblock content %}

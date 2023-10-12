@@ -1,0 +1,34 @@
+{% import 'requirements.html' as reqs %}
+{% import 'components/loading_page.html' as loading %}
+
+
+<html>
+    <head>
+        <link rel="icon" href="{{ static('images/favicon.ico') }}">
+        <title>TaxBandits Create Business API SDK</title>
+
+        {{ reqs.bootstrap5() }}
+        {{ reqs.font_awesome4() }}
+        {{ reqs.jQuery3() }}
+        {{ reqs.google_fonts() }}
+        {{ reqs.material_design_icons() }}
+                
+        <link href="{{ static('css/common.css') }}" rel="stylesheet">
+        <link href="{{ static('css/Site.css') }}" rel="stylesheet">
+
+    </head>
+    <body>
+
+        {{ loading.scripts() }}
+        {{ loading.styles() }}
+        {{ loading.dom() }}
+
+        {% block app %}
+        {% endblock app %}
+
+        <script src="{{ static('js/constant_values.js') }}"></script>
+        <script src="{{ static('js/document_init.js') }}"></script>
+        <script src="{{ static('js/form_utils.js') }}"></script>
+
+    </body>
+</html>

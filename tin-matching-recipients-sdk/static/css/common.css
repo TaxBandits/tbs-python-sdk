@@ -1,0 +1,30 @@
+.btn-primary { background: #F26D21 !important; border-color: #F26D21 !important; }
+
+.bg-light-blue{ background-color: aliceblue; }
+
+.btn-blue, .btn-blue:hover { background: #89CFF0; border-color: #89CFF0; }
+
+.django-messages { width: 50%; left: 25%; }
+
+.django-messages .cls-btn { margin-top: -4px; font-size: 19px; }
+
+
+.heading-bottom-line::after {
+    left: 4.688rem;
+}
+
+.heading-bottom-line::before {
+    left: 0;
+}
+
+.heading-bottom-line::after, .heading-bottom-line::before {
+    width: 4.375rem;
+    background: #242424;
+
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 100%;
+    height: 0.188rem;
+    transition: all 0.4s linear;
+}

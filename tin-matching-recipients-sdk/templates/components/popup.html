@@ -1,0 +1,33 @@
+{% macro dom(id, top='', width="auto", height="auto") %}
+
+    <div class="modal fade changed" id="{{id}}" 
+        aria-hidden="true" aria-labelledby="exampleModalToggleLabel" 
+        tabindex="-1"
+    >
+        <div class="modal-dialog modal-xl"
+            style="
+                width: {{ width }} !important;
+                {{ 'top: ' + top + ';' if top else '' }}
+            "
+        >
+            <div class="modal-content" id="ModelBody">
+
+                <div class="modal-header">
+                    {{ caller('header') }}
+
+                    <button type="button"
+                        class="btn-close bg-white rounded-circle border-0 fw-bold position-absolute end-n-10 top-n-13 modal-close button-hide fs-18 fw-500"
+                        data-bs-dismiss="modal" aria-label="Close"
+                        style="padding: 7px 6px 6px;"
+                    >X</button>
+                </div>
+
+                <div class="modal-body">
+                    {{ caller('body') }}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endmacro %}
