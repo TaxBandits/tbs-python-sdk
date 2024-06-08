@@ -1,4 +1,5 @@
-# TaxBandits SDK for Python
+<p align="center"> <img src="https://github.com/TaxBandits/tbs-python-sdk/assets/139776689/8adeb9fe-df68-4444-b669-7ba76a3dafb4 alt="TaxBandits API"/> </p>
+<h1 align="center"> TaxBandits SDK for Python</h1>
 ## Overview
 TaxBandits API enables the automation of Form W-9 & 1099 forms and simplifies the preparation and e-filing of various tax returns with the federal and state. Our developer-friendly API supports the e-filing of 1099-NEC, 1099-MISC, 1099-K, other 1099 forms, W-2, 941, 940, and 1095 forms.
 
