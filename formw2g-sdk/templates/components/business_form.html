@@ -1,0 +1,647 @@
+{% import 'components/popup.html' as popup %}
+
+
+{% macro dom(title, button_label, button_urls, csrf_token, form_data={}, api_res=none) %}
+
+{{ styles() }}
+{{ scripts() }}
+
+<!-- ********** Initizing Form ********** -->
+{% set fd = {} %}
+{% set signingAuthorityObj = {} %}
+{% set addressObj = {} %}
+
+{% if form_data %}
+
+{% set fd = form_data %}
+
+{% if fd.SigningAuthority %}
+{% set signingAuthorityObj = fd.SigningAuthority %}
+{% endif %}
+
+{% if fd.IsForeign %}
+{% if fd.ForeignAddress %}
+{% set addressObj = fd.ForeignAddress %}
+{% endif %}
+{% else %}
+{% if fd.USAddress %}
+{% set addressObj = fd.USAddress %}
+{% endif %}
+{% endif %}
+
+<script purpose="init">
+
+    $(() => {
+
+        var bt_value = '{{ fd.BusinessType or "" }}'
+        var bmt_value = '{{ fd.SigningAuthority.BusinessMemberType or "" }}'
+        var koe_value = '{{ fd.KindOfEmployer or "" }}'
+        var kop_value = '{{ fd.KindOfPayer or "" }}'
+        var s_value = '{{ addressObj.State or "" }}'
+        var c_value = '{{ addressObj.Country or "" }}'
+
+
+        select_option_for_selectTag(selectTagId = 'selectBusinessType', bt_value)
+        setTimeout(() => {
+            var selectTag = document.getElementById('selectBusinessType')
+            businessTypeChanged(selectTag)
+            select_option_for_selectTag(selectTagId = 'selectBusinessMemberType', bmt_value)
+        }, select_option_time)
+
+        select_option_for_selectTag(selectTagId = 'selectKindOfEmployer', koe_value)
+        select_option_for_selectTag(selectTagId = 'selectKindOfPayer', kop_value)
+        select_option_for_selectTag(selectTagId = 'selectCountry', c_value)
+        select_option_for_selectTag(selectTagId = 'selectState', s_value)
+
+    })
+
+</script>
+
+{% endif %}
+<!-- ********** / Initizing Form ********** -->
+
+<div class="w-75 m-auto">
+    <form class="border-1 border rounded-2 pb-4" method="post" action="{{ button_urls.submit }}">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+        <h2 class="head-h1 px-12px" id="h2PageTitle">{{ title }}</h2>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5" id="businessNameContainer">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger">*</span>
+                        Business Name:
+                    </label>
+                    <input type="text" class="form-control" id="BusinessNm" name="BusinessNm" {% if 'BusinessNm' in fd
+                        %} value="{{ fd.BusinessNm }}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5" id="firstNmContainer">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger">*</span>
+                        First Name:
+                    </label>
+                    <input type="text" class="form-control" id="FirstNm" name="FirstNm" {% if 'FirstNm' in fd %}
+                        value="{{ fd.FirstNm }}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5" id="payerRefContainer">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger"></span>
+                        Payer Ref:
+                    </label>
+                    <input type="text" class="form-control" name="PayerRef" {% if 'PayerRef' in fd %}
+                        value="{{ fd.PayerRef }}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5" id="MiddleNmContainer">
+                <div class="labelName">
+                    <label class="control-label">
+                        Middle Name:
+                    </label>
+                    <input type="text" class="form-control" id="MiddleNm" name="MiddleNm" {% if 'MiddleNm' in fd %}
+                        value="{{ fd.MiddleNm }}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5" id="SuffixContainer">
+                <div class="labelName">
+                    <label class="control-label">Suffix:</label>
+                    <select name="Suffix" class="form-select" id="Suffix">
+                        <option value="">-- Select Suffix --</option>
+                        {% set suffix_value = fd.MiddleNm if fd.MiddleNm else '' %}
+                        {% for option in ['Jr', 'Sr', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] %}
+                        <option value="{{ option }}" {% if suffix_value==option %}selected{% endif %}>{{
+                            option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-10" id="LastNmContainer">
+                <div class="labelName">
+                    <label class="control-label"><span class="text-danger">*</span>
+                        Last Name:
+                    </label>
+                    <input type="text" class="form-control" id="LastNm" name="LastNm" {% if 'LastNm' in fd %}
+                        value="{{ fd.LastNm }}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger"></span>
+                        Trade Name:
+                    </label>
+                    <input type="text" class="form-control" name="TradeNm" {% if 'TradeNm' in fd %}
+                        value="{{fd.TradeNm}}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger">*</span>
+                        EIN or SSN:
+                    </label>
+                    <label class="mx-3 user-select-none" for="checkBoxIsEIN">
+                        <input class="form-check-input cursor-pointer" type="checkbox" id="checkBoxIsEIN" name="IsEIN"
+                            {% if fd.IsEIN %} checked="{{fd.IsEIN}}" {% endif %} />
+                        Is EIN?
+                    </label>
+                    <input type="text" class="form-control" name="EINorSSN" maxLength="9" {% if 'EINorSSN' in fd %}
+                        value="{{fd.EINorSSN}}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger">*</span>
+                        Email Address:
+                    </label>
+                    <input type="text" class="form-control" name="Email" {% if 'Email' in fd %} value="{{fd.Email}}" {%
+                        endif %} />
+
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger"></span>
+                        Contact Name:
+                    </label>
+                    <input type="text" class="form-control" name="ContactNm" {% if 'ContactNm' in fd %}
+                        value="{{fd.ContactNm}}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger">*</span>
+                        Phone:
+                    </label>
+                    <input type="text" class="form-control" name="Phone" maxLength="10" {% if 'Phone' in fd %}
+                        value="{{fd.Phone}}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger"></span>
+                        Phone Extn:
+                    </label>
+                    <input type="text" class="form-control" name="PhoneExtn" maxLength="5" {% if 'PhoneExtn' in fd %}
+                        value="{{fd.PhoneExtn}}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger"></span>
+                        Fax:
+                    </label>
+                    <input type="text" class="form-control" name="Fax" maxLength="10" {% if 'Fax' in fd %}
+                        value="{{fd.Fax}}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger">*</span>
+                        Business Type:
+                    </label>
+                    <select class="form-control form-select" id="selectBusinessType" name="BusinessType"
+                        onchange="businessTypeChanged(this)">
+                        <option selected value="">Business Type</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">Business Member Type:</label>
+                    <select class="form-control form-select" id="selectBusinessMemberType" name="BusinessMemberType">
+                        <option selected value="">Business Member Type</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">
+                        <span class="text-danger"></span>
+                        Signing Authority Name:
+                    </label>
+                    <input type="text" class="form-control" name="SigningAuthorityName" {% if 'Name' in
+                        signingAuthorityObj %} value="{{signingAuthorityObj.Name}}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label"><span class="text-danger"></span>Signing Authority
+                        Phone:</label>
+                    <input type="text" class="form-control" name="SigningAuthorityPhone" maxLength="10" {% if 'Phone' in
+                        signingAuthorityObj %} value="{{signingAuthorityObj.Phone}}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label">Kind Of Employer:</label>
+                    <select class="form-control form-select" id="selectKindOfEmployer" name="KindOfEmployer">
+                        <option selected value="">Kind Of Employer</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5" style="margin-top: 32px;">
+                <span style="display: inline-block"></span>
+                <div class="labelName">
+                    <label class="control-label">Kind Of Payer:</label>
+                    <select class="form-control form-select" id="selectKindOfPayer" name="KindOfPayer">
+                        <option selected value="">Kind Of Payer</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <label class="my-1 user-select-none" for="checkIsForeign">
+                    <input class="form-check-input cursor-pointer" type="checkbox" name="isForeign" id="checkIsForeign"
+                        onchange="checkIsForeignOrNot(this)" {% if fd.IsForeign %} checked {% endif %} />
+                    Is Foreign?
+                </label>
+                <div class="labelName">
+                    <label class="control-label"><span class="text-danger">*</span>Address 1:</label>
+                    <input type="text" class="form-control" name="Address1" {% if 'Address1' in addressObj %}
+                        value="{{addressObj.Address1}}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div class="row d-flex justify-content-center mb-15px">
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label"><span class="text-danger"></span>Address 2:</label>
+                    <input type="text" class="form-control" name="Address2" {% if 'Address2' in addressObj %}
+                        value="{{addressObj.Address2}}" {% endif %} />
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="labelName">
+                    <label class="control-label"><span class="text-danger">*</span>City:</label>
+                    <input type="text" class="form-control" name="City" {% if 'City' in addressObj %}
+                        value="{{addressObj.City}}" {% endif %} />
+                </div>
+            </div>
+        </div>
+
+        <div id="foreignDiv" {% if not fd.IsForeign %} style="display: none;" {% endif %}>
+            <div class="row d-flex justify-content-center mb-15px">
+                <div class="col-md-5">
+                    <div class="labelName">
+                        <label class="control-label">
+                            <span class="text-danger">*</span>
+                            Country:
+                        </label>
+                        <select class="form-control form-select" id="selectCountry" name="Country">
+                            <option selected value="">Country</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="labelName">
+                        <label class="control-label"><span class="text-danger">*</span>ProvinceOrStateNm:</label>
+                        <input type="text" class="form-control" name="ProvinceOrStateNm" {% if 'ProvinceOrStateNm' in
+                            addressObj %} value="{{addressObj.ProvinceOrStateNm}}" {% endif %} />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row d-flex justify-content-center mb-15px">
+                <div class="col-md-5">
+                    <div class="labelName">
+                        <label class="control-label"><span class="text-danger">*</span>Postal Code:</label>
+                        <input type="text" class="form-control" name="PostalCd" {% if 'PostalCd' in addressObj %}
+                            value="{{addressObj.PostalCd}}" {% endif %} />
+                    </div>
+                </div>
+                <div class="col-md-5">
+                </div>
+            </div>
+        </div>
+
+        <div id="usDiv" {% if fd.IsForeign %} style="display: none;" {% endif %}>
+            <div class="row d-flex justify-content-center mb-15px">
+                <div class="col-md-5">
+                    <div class="labelName">
+                        <label class="control-label">
+                            <span class="text-danger">*</span>
+                            State:
+                        </label>
+                        <select class="form-control form-select" id="selectState" name="State">
+                            <option selected value="">State</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="labelName">
+                        <label class="control-label">
+                            <span class="text-danger">*</span>
+                            Zip Code:
+                        </label>
+                        <input type="text" class="form-control" name="ZipCd" {% if 'ZipCd' in addressObj %}
+                            value="{{addressObj.ZipCd}}" {% endif %} />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center p-10">
+            <button class="btn btn_primary btn_lg">
+                {{ button_label }}
+            </button>
+        </div>
+
+    </form>
+
+    <a href="{{ button_urls.back }}">
+        <button class="btn_back mt-3 mb-3">
+            Back
+        </button>
+    </a>
+
+    <div class="api-response-popup">
+        {% if api_res %}
+        <script>
+            $(() => {
+                $('#BusinessModalToggle').modal('show')
+            })
+        </script>
+        {% endif %}
+
+        {% call(content) popup.dom(id='BusinessModalToggle', top='45px') %}
+
+        {% if content == 'header' %}
+        <div class="popup-head-content">
+            <h5 class="modal-title" id="exampleModalToggleLabel">Business Response</h5>
+        </div>
+        {% endif %}
+
+        {% if content == 'body' %}
+        <div class="popup-body-content">
+            <div class="table-container mt-2 mb-4">
+                <table>
+                    <tr class="fw-600 ">
+                        <th class="text-center fw-600 bg-dull-blue" width="25%">Status Code</th>
+                        <th class="text-center" width="30%">Status Name</th>
+                        <th class="text-center" width="35%">Status Message</th>
+                    </tr>
+                    <tbody id="BusinessStatusTBody">
+                        <td class="text-center align-top">{{ api_res.StatusCode }}</td>
+                        <td class="text-center align-top">{{ api_res.StatusName }}</td>
+                        <td class="text-center border-radious-bottom-right align-top 
+                                            {% if api_res.Errors %}
+                                                text-danger
+                                            {% else %}
+                                                text-success
+                                            {% endif %}
+                                        ">{{ api_res.get('StatusMessage') }}</td>
+                    </tbody>
+                </table>
+            </div>
+
+            {% if api_res.Errors %}
+
+            <div>
+                <h2 class="tabel-sub-head">Error Records</h2>
+                <div class="table-container mb-3">
+                    <table>
+                        <tr class="fw-600 ">
+                            <th class="text-center fw-600">Id</th>
+                            <th class="text-center">Name</th>
+                            <th class="text-center">Message</th>
+                            <th class="text-center">Type</th>
+                        </tr>
+                        <tbody id="errorsTBody">
+                            {% for err in api_res.Errors %}
+                            <tr>
+                                <td class="text-center align-top">{{ err.Id }}</td>
+                                <td class="text-center align-top">{{ err.Name }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">{{ err.Message }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">
+                                    <span class="error-label">Error</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% else %}
+
+            <div id="successRecordsBody">
+                <div>
+                    <h2 class="tabel-sub-head mt-3" id="submissionId"></h2>
+                </div>
+
+                <h2 class="tabel-sub-head mt-4">Success Records</h2>
+
+                <div class="table-container mb-3">
+                    <table>
+                        <tr class="fw-600 ">
+                            <th class="text-center fw-600">Business Id</th>
+                            <th class="text-center">IsEIN</th>
+                            <th class="text-center">EINorSSN</th>
+                            <th class="text-center">Business Name</th>
+                            <th class="text-center">First Name</th>
+                            <th class="text-center">Last Name</th>
+                            <th class="text-center">Middle Name</th>
+                            <th class="text-center">Suffix</th>
+                        </tr>
+                        <tbody id="successRecordsTBody">
+                            <tr>
+                                <td>{{ api_res.BusinessId }}</td>
+                                <td>{{ api_res.IsEIN }}</td>
+                                <td>{{ api_res.EINorSSN }}</td>
+                                <td>{{ api_res.BusinessNm.strip() if api_res.BusinessNm and api_res.BusinessNm.strip()
+                                    else '-' }}</td>
+                                <td>{{ api_res.FirstNm.strip() if api_res.FirstNm and api_res.FirstNm.strip() else '-'
+                                    }}</td>
+                                <td>{{ api_res.LastNm.strip() if api_res.LastNm and api_res.LastNm.strip() else '-' }}
+                                </td>
+                                <td>{{ api_res.MiddleNm.strip() if api_res.MiddleNm and api_res.MiddleNm.strip() else
+                                    '-' }}</td>
+                                <td>{{ api_res.Suffix.strip() if api_res.Suffix and api_res.Suffix.strip() else '-' }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% endcall %}
+    </div>
+
+</div>
+
+{% endmacro %}
+
+{% macro styles() %}
+<style>
+    span.error-label {
+        background-color: #e6000d;
+        color: #fff;
+        padding: 1px 5px 2px 5px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+</style>
+{% endmacro %}
+
+{% macro scripts() %}
+
+<script purpose="assign_options_for_select_tags">
+    $(() => {
+        setTimeout(() => {
+            assign_options_for_select_tags()
+        }, set_options_time)
+    })
+
+    function assign_options_for_select_tags() {
+        set_options_to_selectTag(selectTagId = 'selectBusinessType', businessType, businessTypeShorts)
+        set_options_to_selectTag(selectTagId = 'selectKindOfEmployer', kindOfEmployer)
+        set_options_to_selectTag(selectTagId = 'selectKindOfPayer', kindOfPayer)
+        set_options_to_selectTag(selectTagId = 'selectState', states, statesShort)
+        set_options_to_selectTag(selectTagId = 'selectCountry', countries, countryShorts)
+    }
+</script>
+
+<script purpose="To toggle form elements and its options">
+
+    function checkIsForeignOrNot(checkBoxElem) {
+
+        var foreignDiv = document.getElementById('foreignDiv')
+        var usDiv = document.getElementById('usDiv')
+
+        foreignDiv.style.display = checkBoxElem.checked ? 'block' : 'none'
+        usDiv.style.display = checkBoxElem.checked ? 'none' : 'block'
+    }
+
+    function businessTypeChanged(selectTag) {
+        console.log('tr in businessTypeChanged', selectTag);
+
+        remove_valid_options(selectTagId = 'selectBusinessMemberType')
+        if (selectTag.value == "ESTE") {
+            set_options_to_selectTag(selectTagId = 'selectBusinessMemberType', EstateBusinessMembers)
+        } else if (selectTag.value == "PART") {
+            set_options_to_selectTag(selectTagId = 'selectBusinessMemberType', PartnershipBusinessMembers)
+        } else if (selectTag.value == "CORP") {
+            set_options_to_selectTag(selectTagId = 'selectBusinessMemberType', CorporationBusinessMembers)
+        } else if (selectTag.value == "EORG") {
+            set_options_to_selectTag(selectTagId = 'selectBusinessMemberType', ExemptOrganizationBusinessMembers)
+        } else if (selectTag.value == "SPRO") {
+            set_options_to_selectTag(selectTagId = 'selectBusinessMemberType', SoleProprietorshipBusinessMembers)
+        }
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const checkboxIsEIN = document.getElementById("checkBoxIsEIN");
+
+        function toggleSecondPayeeField() {
+            const isEIN = checkboxIsEIN.checked;
+
+            const businessNameContainer = document.getElementById("businessNameContainer");
+
+            const firstNmContainerDiv = document.getElementById("firstNmContainer");
+            const LastNmContainerDiv = document.getElementById("LastNmContainer");
+            const MiddleNmContainerDiv = document.getElementById("MiddleNmContainer");
+            const SuffixContainerDiv = document.getElementById("SuffixContainer");
+
+            if (isEIN) {
+                // Show business fields
+                businessNameContainer.style.display = "block";
+
+                // Hide individual name fields
+                firstNmContainerDiv.style.display = "none";
+                LastNmContainerDiv.style.display = "none";
+                MiddleNmContainerDiv.style.display = "none";
+                SuffixContainerDiv.style.display = "none";
+
+                // Clear individual name values
+                $('#FirstNm').val('');
+                $('#LastNm').val('');
+                $('#MiddleNm').val('');
+                $('#Suffix').val('');
+                $('#BusinessNm').val('');
+            } else {
+                // Hide business fields
+                businessNameContainer.style.display = "none";
+
+                // Show individual name fields
+                firstNmContainerDiv.style.display = "block";
+                LastNmContainerDiv.style.display = "block";
+                MiddleNmContainerDiv.style.display = "block";
+                SuffixContainerDiv.style.display = "block";
+
+                // Clear business name values
+                $('#FirstNm').val('');
+                $('#LastNm').val('');
+                $('#MiddleNm').val('');
+                $('#Suffix').val('');
+                $('#BusinessNm').val('');
+            }
+        }
+
+        // Run initially on page load
+        toggleSecondPayeeField();
+        // Listen to checkbox change
+        checkboxIsEIN.addEventListener("change", toggleSecondPayeeField);
+    });
+
+
+
+</script>
+
+{% endmacro %}

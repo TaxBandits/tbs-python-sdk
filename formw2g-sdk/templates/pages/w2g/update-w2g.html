@@ -1,0 +1,74 @@
+{% extends 'app.html' %}
+
+{% import 'components/form1099w2g.html' as form1099w2g %}
+
+{% block content %}
+
+<div class="container">
+
+    {% set update_url_kwargs = {
+        'b_id': business_id,
+        'sub_id': submission_id,
+        'rec_id': record_id
+    } %}
+
+    {# Extract and sanitize fields from business #}
+    {% set first_nm = business['FirstNm'] %}
+    {% set middle_nm = business['MiddleNm'] %}
+    {% set last_nm = business['LastNm'] %}
+    {% set suffix = business['Suffix'] %}
+    {% set business_nm = business['BusinessNm'] %}
+    {% set ein_or_ssn = business['EINorSSN'] %}
+
+    {# Validate helper macro #}
+    {% macro is_valid(val) %}
+        {{ val is not none and val|string|trim != '' and val|string|lower != 'none' }}
+    {% endmacro %}
+
+    {# Assemble name parts safely #}
+    {% set name_parts = [] %}
+    {% if first_nm and first_nm|string|trim and first_nm|string|lower != 'none' %}
+        {% set name_parts = name_parts + [first_nm] %}
+    {% endif %}
+    {% if middle_nm and middle_nm|string|trim and middle_nm|string|lower != 'none' %}
+        {% set name_parts = name_parts + [middle_nm] %}
+    {% endif %}
+    {% if suffix and suffix|string|trim and suffix|string|lower != 'none' %}
+        {% set name_parts = name_parts + [suffix] %}
+    {% endif %}
+    {% if last_nm and last_nm|string|trim and last_nm|string|lower != 'none' %}
+        {% set name_parts = name_parts + [last_nm] %}
+    {% endif %}
+
+    {# Final b_name assignment based on FirstNm and LastNm validity #}
+    {% if first_nm and first_nm|string|trim and last_nm and last_nm|string|trim %}
+        {% set b_name = name_parts | join(' ') %}
+    {% else %}
+        {% set b_name = business_nm if business_nm and business_nm|string|trim else '' %}
+    {% endif %}
+
+    {% set list_url_kwargs = {
+        'b_id': business_id,
+        'b_name': b_name,
+        'b_tin': ein_or_ssn
+    } %}
+
+    {{
+        form1099w2g.dom(
+            title = "Update FormW2G",
+            button_label = "Update FormW2G",
+            button_urls = {
+                "submit": url("update-w2g", kwargs=update_url_kwargs),
+                "model_close": url("list-w2g", kwargs=list_url_kwargs),
+                "back": url("list-w2g", kwargs=list_url_kwargs)
+            },
+            csrf_token = csrf_token,
+            business = business,
+            form_data = form_data,
+            api_res = api_res
+        )
+    }}
+
+</div>
+
+{% endblock content %}

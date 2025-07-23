@@ -1,0 +1,129 @@
+{% extends 'app.html' %}
+
+
+{% block content %}
+<div class="container p-5">
+
+    {% if Businesses %}
+
+    {%
+    set table_headers = [
+    {'label': 'BusinessId', 'key': 'BusinessId'},
+    {'label': 'BusinessName', 'key': 'BusinessNm'},
+    {'label': 'FirstName', 'key': 'FirstNm'},
+    {'label': 'MiddleName', 'key': 'MiddleNm'},
+    {'label': 'Suffix', 'key': 'Suffix'},
+    {'label': 'LastName', 'key': 'LastNm'},
+    {'label': 'Email', 'key': 'Email'}
+    ]
+    %}
+
+    <div class="response-table">
+
+        <div>
+            <div class='d-flex align-items-center justify-content-between'>
+                <div>
+                    <h1 class='head-1'>List Businesses Details</h1>
+                    <div class="heading-bottom-line position-relative pb-0  mb-3"></div>
+                </div>
+
+                <a class="btn btn_primary mx-2" href="{{ url('create-business') }}">
+                    Create Business
+                </a>
+
+                <!-- <button class='btn btn_primary shadow btn_md float-right'>
+                            Create Business
+                        </button> -->
+            </div>
+        </div>
+
+        <table class="table_component table mt-2 table-bordered rounded-0">
+
+            <thead>
+                <tr>
+                    {% for th in table_headers %}
+                    <th class="text-center">{{ th.label }}</th>
+                    {% endfor %}
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for row in Businesses %}
+                <tr>
+                    {% for th in table_headers %}
+                    <td class="text-nowrap">
+                        {{ row[th.key] if row[th.key] else '-' }}
+                    </td>
+                    {% endfor %}
+                    <td class="text-center d-flex flex-row justify-content-center">
+
+
+                        {% set first_nm = row['FirstNm'] %}
+                        {% set last_nm = row['LastNm'] %}
+                        {% set middle_nm = row['MiddleNm'] %}
+                        {% set suffix = row['Suffix'] %}
+
+                        {% macro is_valid(val) %}
+                        {{ val is not none and val|string|lower != 'none' and val|string|trim != '' }}
+                        {% endmacro %}
+
+                        {# Check if first and last name are valid #}
+                        {% if first_nm and last_nm and first_nm|string|lower != 'none' and last_nm|string|lower !=
+                        'none' and first_nm|string|trim != '' and last_nm|string|trim != '' %}
+                        {% set full_name = first_nm %}
+                        {% if middle_nm and middle_nm|string|lower != 'none' and middle_nm|string|trim != '' %}
+                        {% set full_name = full_name ~ ' ' ~ middle_nm %}
+                        {% endif %}
+                        {% if suffix and suffix|string|lower != 'none' and suffix|string|trim != '' %}
+                        {% set full_name = full_name ~ ' ' ~ suffix %}
+                        {% endif %}
+                        {% set full_name = full_name ~ ' ' ~ last_nm %}
+                        {% set b_name = full_name %}
+                        {% else %}
+                        {% set b_name = row['BusinessNm'] %}
+                        {% endif %}
+
+                        {% set list_url_kwargs = {
+                        'b_id': row['BusinessId'],
+                        'b_name': b_name,
+                        'b_tin': row['EINorSSN']
+                        } %}
+
+
+                        <a class="btn btn-primary status-btn btn_smm me-2 text-nowrap"
+                            href="{{ url('create-w2g', kwargs={'b_id': row['BusinessId']}) }}">Create W-2G</a>
+                        <a class="btn btn-primary status-btn btn_smm me-2 text-nowrap"
+                            href="{{ url('list-w2g', kwargs=list_url_kwargs) }}">List W-2Gs</a>
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+    <div class='container mx-auto mt-5' id="emptyCreateBusinessDiv">
+        <div class="text-center">
+            <p>
+                Before you create FormW2G in your TaxBandits account, you should have atleast one Business in your
+                account.
+                To add a new business, click 'Create Business' button below.
+            </p>
+
+            <a class="btn btn_primary shadow btn_md mx-2" href="{{ url('create-business') }}">Create Business</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <a href="{{ url('home') }}">
+        <button class="btn_back mt-3 mb-3">
+            Back
+        </button>
+    </a>
+</div>
+{% endblock content %}

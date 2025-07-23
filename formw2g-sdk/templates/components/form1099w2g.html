@@ -1,0 +1,1341 @@
+{% import 'components/popup.html' as popup %}
+{% import 'components/table_dynamic_rows.html' as table_dr %}
+{% import 'components/table.html' as table %}
+
+
+{% macro dom(title, button_label, button_urls, csrf_token, business, form_data={}, api_res=none) %}
+
+{{ styles() }}
+{{ scripts() }}
+
+<!-- ********** Initizing Form ********** -->
+{% set fd = {} %}
+{% set addressObj = {} %}
+{% set return_data = {} %}
+
+{% if form_data %}
+
+{% set fd = form_data %}
+
+{% set return_data = fd.ReturnData[0] %}
+
+{% if return_data %}
+{% if return_data.Recipient.IsForeign %}
+{% set addressObj = return_data.Recipient.ForeignAddress %}
+{% else %}
+{% set addressObj = return_data.Recipient.USAddress %}
+{% endif %}
+
+{% if return_data.W2GFormData %}
+{% set koe_value = return_data.W2GFormData.B3WagerType %}
+{% endif %}
+
+{% if return_data.W2GFormData.States %}
+{% set formState1 = return_data.W2GFormData.States %}
+{% endif %}
+{% endif %}
+
+{% endif %}
+
+
+
+<script purpose="Some Things should happen in the form once document ready">
+    $(() => {
+        setTimeout(() => { assign_options_for_select_tags() }, set_options_time)
+        setTimeout(() => { assign_options_for_select_tags() }, set_options_time)
+        setTimeout(() => { show_and_hide_divs_at_init() }, show_hide_divs_time)
+    })
+</script>
+
+<!-- ********** / Initizing Form ********** -->
+<div class="w-75 m-auto">
+    <div class="border-1 border rounded-2 pb-4" id="form_parent">
+        <h2 class="head-h1 px-12px">{{ title }}</h2>
+        <form method="post" class="px-4" id="w2g_request" onsubmit="return false">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+            <div class="d-flex align-items-center fs-20 text-dark">
+                <h1 class="head-1 me-3">
+                    {% if business.IsEIN %}
+                    {{ business.BusinessNm }}
+                    {% elif business.FirstNm and business.FirstNm|trim != '' and business.LastNm and
+                    business.LastNm|trim != '' %}
+                    {{ business.FirstNm }}
+                    {% if business.MiddleNm and business.MiddleNm|trim != '' %} {{ business.MiddleNm }}{% endif %}
+                    {% if business.Suffix and business.Suffix|trim != '' %} {{ business.Suffix }}{% endif %}
+                    {{ business.LastNm }}
+                    {% else %}
+                    {{ business.BusinessNm }}
+                    {% endif %}
+                </h1>
+
+
+                <span class="text-muted fs-14 mb-2">( {{ 'EIN' if business.IsEIN else 'SSN' }} : {{ business.EINorSSN }}
+                    )</span>
+            </div>
+
+            <div class="SubmissionManifest">
+                <div class="row d-flex justify-content-center mb-15px bg-white">
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                Tax Year:
+                            </label>
+                            <input type="text" name="TaxYear" class="form-control" {% if fd %}
+                                value="{{fd.SubmissionManifest.TaxYear}}" {% endif %} />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6"></div>
+
+                    <div class="col mt-3">
+                        <label class="me-3 user-select-none">
+                            <span class="text-danger">*</span>
+                            <input type="checkbox" name="IsFederalFiling" id="checkIsFederalFiling"
+                                class="me-1 form-check-input cursor-pointer" {% if fd and
+                                fd.SubmissionManifest.IsFederalFiling %} checked {% endif %} />
+                            IsFederalFiling
+                        </label>
+
+                        <label class="me-3 user-select-none">
+                            <input type="checkbox" name="IsStateFiling" id="checkIsStateFiling"
+                                class="me-1 form-check-input cursor-pointer" {% if fd and
+                                fd.SubmissionManifest.IsStateFiling %} checked {% endif %} />
+                            IsStateFiling
+                        </label>
+
+                        <label class="me-3 user-select-none">
+                            <input type="checkbox" name="IsPostal" id="checkIsPostal"
+                                class="me-1 form-check-input cursor-pointer" {% if fd and fd.SubmissionManifest.IsPostal
+                                %} checked {% endif %} />
+                            IsPostal
+                        </label>
+
+                        <label class="me-3 user-select-none">
+                            <input type="checkbox" name="IsOnlineAccess" id="checkIsOnlineAccess"
+                                class="me-1 form-check-input cursor-pointer" {% if fd and
+                                fd.SubmissionManifest.IsOnlineAccess %} checked {% endif %} />
+                            IsOnlineAccess
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+            <h5 class="sub-head text-left mt-4 mb-3" style="font-weight: bold">Recipient Details</h5>
+
+            <div class="RecipientDetails">
+
+                <div class="row d-flex justify-content-center mb-15px">
+                    <div class="col-md-6 d-flex" style="justify-content: space-evenly;">
+                        <label class="user-select-none">
+                            <input type="checkbox" name="ReturnDataIsPostal"
+                                class="form-check-input cursor-pointer me-1" {% if return_data and return_data.IsPostal
+                                %} checked {% endif %} />
+                            IsPostal
+                        </label>
+                        <label class="user-select-none">
+                            <input type="checkbox" name="ReturnDataIsOnlineAccess"
+                                class="form-check-input cursor-pointer me-1" {% if return_data and
+                                return_data.IsOnlineAccess %} checked {% endif %} />
+                            IsOnlineAccess
+                        </label>
+                    </div>
+                    <div class="col-md-6"></div>
+                </div>
+
+                <div class="row d-flex justify-content-center mb-15px">
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                SequenceId:
+                            </label>
+                            <input type="text" name="SequenceId" class="form-control" {% if return_data %}
+                                value="{{return_data.SequenceId}}" {% endif %} />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="control-label"><span class="text-danger">*</span>TIN Type:</label>
+
+                        {% if return_data %}
+                        {% set tinTypeRadio = return_data.Recipient.TINType %}
+                        {% endif %}
+
+                        <div class="mt-2">
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio" value="EIN" name="TINType" id="radioTINTypeEIN"
+                                    class="form-check-input" {% if tinTypeRadio and tinTypeRadio=='EIN' %} checked {%
+                                    endif %} />
+                                <label class="form-check-label user-select-none" for="radioTINTypeEIN">EIN</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" value="SSN" name="TINType" id="radioTINTypeSSN"
+                                    class="form-check-input" {% if tinTypeRadio and tinTypeRadio=='SSN' %} checked {%
+                                    endif %} />
+                                <label class="form-check-label user-select-none" for="radioTINTypeSSN">SSN</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" value="ATIN" name="TINType" id="radioTINTypeATIN"
+                                    class="form-check-input" {% if tinTypeRadio and tinTypeRadio=='ATIN' %} checked {%
+                                    endif %} />
+                                <label class="form-check-label user-select-none" for="radioTINTypeATIN">ATIN</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" value="ITIN" name="TINType" id="radioTINTypeITIN"
+                                    class="form-check-input" {% if tinTypeRadio and tinTypeRadio=='ITIN' %} checked {%
+                                    endif %} />
+                                <label class="form-check-label user-select-none" for="radioTINTypeITIN">ITIN</label>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row d-flex justify-content-center mb-15px">
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                TIN:
+                            </label>
+                            <input type="text" name="TIN" id="textTIN" class="form-control" {% if return_data %}
+                                value="{{return_data.Recipient.TIN}}" {% endif %} />
+                        </div>
+                    </div>
+                    <div class="col-md-6" id="firstPayeeContainer">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                First Payee Name:
+                            </label>
+                            <input type="text" name="FirstPayeeNm" id="FirstPayeeNm" class="form-control" {% if
+                                return_data %} value="{{return_data.Recipient.FirstPayeeNm}}" {% endif %} />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" id="firstNmContainer">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                First Name:
+                            </label>
+                            <input type="text" name="FirstNm" id="FirstNm" class="form-control" {% if return_data %}
+                                value="{{return_data.Recipient.FirstNm}}" {% endif %} />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row d-flex justify-content-center mb-2">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-6">
+                        <label class="user-select-none">
+                            <input type="checkbox" name="IsForeign" id="checkIsForeign"
+                                onchange="showAssociatedDivForAddress(this)" class="form-check-input cursor-pointer" {%
+                                if return_data and return_data.Recipient.IsForeign %} checked {% endif %} />
+                            Is Foreign?
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row d-flex justify-content-center mb-15px">
+                    <div class="col-md-6" id="MiddleNmContainer">
+                        <div class="labelName">
+                            <label class="control-label"><span class="text-danger"></span>Middle Name:</label>
+                            <input type="text" name="MiddleNm" class="form-control" id="MiddleNm" {% if return_data %}
+                                value="{{return_data.Recipient.MiddleNm}}" {% endif %} />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+
+                        <div class="col-md-6" id="SuffixContainer">
+                            <div class="labelName">
+                                <label class="control-label"><span class="text-danger"></span>Suffix:</label>
+                                <select name="Suffix" class="form-select" id="Suffix">
+                                    <option value="">-- Select Suffix --</option>
+                                    {% set suffix_value = return_data.Recipient.Suffix if return_data else '' %}
+                                    {% for option in ['Jr', 'Sr', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] %}
+                                    <option value="{{ option }}" {% if suffix_value==option %}selected{% endif %}>{{
+                                        option }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row d-flex justify-content-center mb-15px">
+                    <div class="col-md-6" id="secondPayeeContainer">
+                        <div class="labelName">
+                            <label class="control-label"><span class="text-danger"></span>Second Payee Name:</label>
+                            <input type="text" name="SecondPayeeNm" class="form-control" id="SecondPayeeNm" {% if
+                                return_data %} value="{{return_data.Recipient.SecondPayeeNm}}" {% endif %} />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" id="LastNmContainer">
+                        <div class="labelName">
+                            <label class="control-label"><span class="text-danger">*</span> Last Name:</label>
+                            <input type="text" name="LastNm" class="form-control" id="LastNm" {% if return_data %}
+                                value="{{return_data.Recipient.LastNm}}" {% endif %} />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                Address1:
+                            </label>
+                            <input type="text" name="Address1" class="form-control" {% if addressObj and 'Address1' in
+                                addressObj %} value="{{addressObj.Address1}}" {% endif %} />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row d-flex justify-content-center mb-15px">
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger"></span>
+                                Address2:
+                            </label>
+                            <input type="text" name="Address2" class="form-control" {% if addressObj and 'Address2' in
+                                addressObj %} value="{{addressObj.Address2}}" {% endif %} />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                City:
+                            </label>
+                            <input type="text" name="City" class="form-control" {% if addressObj and 'City' in
+                                addressObj %} value="{{addressObj.City}}" {% endif %} />
+                        </div>
+                    </div>
+                </div>
+
+                {% if addressObj %}
+                <script purpose="assigning values">
+                    $(() => {
+                        var c_value = '{{ addressObj.Country or "" }}'
+                        var s_value = '{{ addressObj.State or "" }}'
+
+                        select_option_for_selectTag(selectTagId = 'selectCountry', c_value)
+                        select_option_for_selectTag(selectTagId = 'selectUsState', s_value)
+                    })
+                </script>
+                {% endif %}
+
+                <div class="usDiv">
+                    <div class="row d-flex justify-content-center mb-15px">
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger">*</span>
+                                    State:
+                                </label>
+                                <select id="selectUsState" name="State" class="form-control form-select">
+                                    <option selected value="">State</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger">*</span>
+                                    ZipCd:
+                                </label>
+                                <input type="text" name="ZipCd" class="form-control" {% if addressObj and 'ZipCd' in
+                                    addressObj %} value="{{addressObj.ZipCd}}" {% endif %} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row d-flex justify-content-center mb-15px">
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger"></span>
+                                    Email:
+                                </label>
+                                <input type="text" name="Email" class="form-control"
+                                    onchange="twoWayBindForSameNameInputs('w2g_request', this)" {% if return_data %}
+                                    value="{{return_data.Recipient.Email}}" {% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger"></span>
+                                    Phone:
+                                </label>
+                                <input type="text" name="Phone" class="form-control"
+                                    onchange="twoWayBindForSameNameInputs('w2g_request', this)" {% if return_data %}
+                                    value="{{return_data.Recipient.Phone}}" {% endif %} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger"></span>
+                                    Fax:
+                                </label>
+                                <input type="text" name="Fax" class="form-control"
+                                    onchange="twoWayBindForSameNameInputs('w2g_request', this)" {% if return_data %}
+                                    value="{{return_data.Recipient.Fax}}" {% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6"></div>
+
+                    </div>
+                </div>
+
+                <div class="foreignDiv d-none">
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger">*</span>
+                                    ProvinceOrStateNm:
+                                </label>
+                                <input type="text" name="ProvinceOrStateNm" class="form-control" {% if addressObj
+                                    and 'ProvinceOrStateNm' in addressObj %} value="{{addressObj.ProvinceOrStateNm}}" {%
+                                    endif %} />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger">*</span>
+                                    Country:
+                                </label>
+                                <select name="Country" id="selectCountry" class="form-control form-select">
+                                    <option selected value="">Country</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger">*</span>
+                                    PostalCd:
+                                </label>
+                                <input type="text" name="PostalCd" class="form-control" {% if addressObj and 'PostalCd'
+                                    in addressObj %} value="{{addressObj.PostalCd}}" {% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger"></span>
+                                    Email:
+                                </label>
+                                <input type="text" name="Email" class="form-control"
+                                    onchange="twoWayBindForSameNameInputs('w2g_request', this)" {% if return_data %}
+                                    value="{{return_data.Recipient.Email}}" {% endif %} />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger"></span>
+                                    Phone:
+                                </label>
+                                <input type="text" name="Phone" class="form-control"
+                                    onchange="twoWayBindForSameNameInputs('w2g_request', this)" {% if return_data %}
+                                    value="{{return_data.Recipient.Phone}}" {% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">
+                                    <span class="text-danger"></span>
+                                    Fax:
+                                </label>
+                                <input type="text" name="Fax" class="form-control"
+                                    onchange="twoWayBindForSameNameInputs('w2g_request', this)" {% if return_data %}
+                                    value="{{return_data.Recipient.Fax}}" {% endif %} />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <h5 class="sub-head text-left mt-4 mb-3" style="font-weight: bold">Form W-2G Details</h5>
+
+            <div class="W2GFormData">
+                <div class="row d-flex justify-content-center mb-15px">
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                Reportable winnings:
+                            </label>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend"></div>
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="B1ReportableWinnings" class="form-control" {% if return_data
+                                    %} value="{{return_data.W2GFormData.B1ReportableWinnings}}" {% endif %} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                <span class="text-danger">*</span>
+                                Date won:
+                            </label>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend"></div>
+                                <input type="hidden" id="B2DateWon1" name="B2DateWon1" />
+                                <input type="date" name="B2DateWon" class="form-control" {% if return_data and
+                                    return_data.W2GFormData.B2DateWon %} {% set
+                                    parts=return_data.W2GFormData.B2DateWon.split('/') %}
+                                    value="{{ parts[2] }}-{{ parts[0] }}-{{ parts[1] }}" {% endif %} />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row d-flex justify-content-center mb-15px">
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label"><span class="text-danger">*</span> Type of wager:</label>
+                            <!-- <input type="text" name="B3WagerType" id="B3WagerType" class="form-control"
+                                    {% if return_data %}
+                                        value="{{return_data.W2GFormData.B3WagerType}}"
+                                    {% endif %}
+                                /> -->
+
+                            <select name="B3WagerType" class="form-select" id="B3WagerType">
+                                <option value="">-- Select Wages Type --</option>
+                                {% set w2gWages_value = return_data.W2GFormData.B3WagerType if return_data else '' %}
+                                {% for option in ['HORSE_RACETRACK', 'DOG_RACETRACK', 'JAI_ALAI',
+                                'STATE_CONDUCTED_LOTTERY', 'KENO', 'BINGO', 'SLOT_MACHINES', 'POKER_WINNINGS',
+                                'ANY_OTHER_TYPE_OF_GAMBLING_WINNINGS'] %}
+                                <option value="{{ option }}" {% if w2gWages_value==option %}selected{% endif %}>{{
+                                    option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                Federal income tax withheld:
+                            </label>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend"></div>
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="B4FedTaxWH" class="form-control" {% if return_data %}
+                                    value="{{return_data.W2GFormData.B4FedTaxWH}}" {% endif %} />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="row d-flex justify-content-center mb-15px">
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">Transaction:</label>
+                            <input type="text" name="B5Txn" id="B5Txn" class="form-control" {% if return_data %}
+                                value="{{return_data.W2GFormData.B5Txn}}" {% endif %} />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">Race:</label>
+                            <input type="text" name="B6Race" id="B6Race" class="form-control" {% if return_data %}
+                                value="{{return_data.W2GFormData.B6Race}}" {% endif %} />
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="row d-flex justify-content-center mb-15px">
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">
+                                Winnings from identical wagers:
+                            </label>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend"></div>
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="B7WinningsIdWagers" class="form-control" {% if return_data %}
+                                    value="{{return_data.W2GFormData.B7WinningsIdWagers}}" {% endif %} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">Cashier:</label>
+                            <input type="text" name="B8Cashier" id="B8Cashier" class="form-control" {% if return_data %}
+                                value="{{return_data.W2GFormData.B8Cashier}}" {% endif %} />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row d-flex justify-content-center mb-15px">
+
+                    <!-- <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">WINNER'S TIN:</label>
+                                <input type="text" name="B9TIN" id="B9TIN" class="form-control"
+                                    {% if return_data %}
+                                        value="{{return_data.W2GFormData.B9TIN}}"
+                                    {% endif %}
+                                />
+                            </div>
+                        </div> -->
+
+                    <div class="col-md-12">
+                        <div class="labelName">
+                            <label class="control-label">Window:</label>
+                            <input type="text" name="B10Window" id="B10Window" class="form-control" {% if return_data %}
+                                value="{{return_data.W2GFormData.B10Window}}" {% endif %} />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row d-flex justify-content-center mb-15px">
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">First identification no:</label>
+                            <input type="text" name="B11FirstId" id="B11FirstId" class="form-control" {% if return_data
+                                %} value="{{return_data.W2GFormData.B11FirstId}}" {% endif %} />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="labelName">
+                            <label class="control-label">Second identification no:</label>
+                            <input type="text" name="B12SecondId" id="B12SecondId" class="form-control" {% if
+                                return_data %} value="{{return_data.W2GFormData.B12SecondId}}" {% endif %} />
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
+
+            <h5 class="sub-head text-left mt-4 mb-3" style="font-weight: bold">Form W-2G State Details</h5>
+
+            <div class="StateReturns">
+                <div class="state1">
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">State/Payer's state identification no:</label>
+                                <input type="text" name="Payerstateno1" id="textPayerStateNo1" class="form-control" {%
+                                    if formState1 %} value="{{formState1.StateIdNum}}" {% endif %} />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            {% if formState1 %}
+                            <script>
+                                $(() => {
+                                    var s1_value = '{{ formState1.StateCd or "" }}'
+
+                                    select_option_for_selectTag(selectTagId = 'selectState1', s1_value)
+                                })
+                            </script>
+                            {% endif %}
+                            <div class="labelName">
+                                <label class="control-label">State:</label>
+                                <select name="State1" id="selectState1" class="form-control form-select">
+                                    <option selected value="">State</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">State winnings:</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend"></div>
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="StateWinnings" id="StateWinnings" class="form-control" {%
+                                        if formState1 %} value="{{formState1.StateWinnings}}" {% endif %} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">State income tax withheld:</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend"></div>
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="StateWH" id="StateWH" class="form-control" {% if
+                                        formState1 %} value="{{formState1.StateWH}}" {% endif %} />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label"> Local winnings:</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend"></div>
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="LocalWinnings" id="LocalWinnings" class="form-control" {%
+                                        if formState1 %} value="{{formState1.LocalWinnings}}" {% endif %} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="labelName">
+                                <label class="control-label">Local income tax withheld:</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend"></div>
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="LocalWH" id="LocalWH" class="form-control" {% if
+                                        formState1 %} value="{{formState1.LocalWH}}" {% endif %} />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row d-flex justify-content-center mb-15px">
+
+                        <div class="col-md-12">
+                            <div class="labelName">
+                                <label class="control-label"> Name of locality:</label>
+                                <input type="text" name="LocalityNm" id="LocalityNm" class="form-control" {% if
+                                    formState1 %} value="{{formState1.LocalityNm}}" {% endif %} />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end align-items-center mt-5">
+
+                <script>
+                    // Function to show/hide based on selected TINType
+                    function toggleSecondPayeeField() {
+                        const selectedTINType = document.querySelector('input[name="TINType"]:checked')?.value;
+                        const secondPayeeDiv = document.getElementById("secondPayeeContainer");
+                        const firstPayeeDiv = document.getElementById("firstPayeeContainer");
+
+                        const firstNmContainerDiv = document.getElementById("firstNmContainer");
+                        const LastNmContainerDiv = document.getElementById("LastNmContainer");
+                        const MiddleNmContainerDiv = document.getElementById("MiddleNmContainer");
+                        const SuffixContainerDiv = document.getElementById("SuffixContainer");
+
+
+                        if (selectedTINType === "EIN") {
+                            secondPayeeDiv.style.display = "block";
+                            firstPayeeDiv.style.display = "block";
+
+                            firstNmContainerDiv.style.display = "none";
+                            LastNmContainerDiv.style.display = "none";
+                            MiddleNmContainerDiv.style.display = "none";
+                            SuffixContainerDiv.style.display = "none";
+                            $('#FirstPayeeNm').val('');
+                            $('#SecondPayeeNm').val('');
+                        } else if (selectedTINType == null || selectedTINType == undefined || selectedTINType == '') {
+                            secondPayeeDiv.style.display = "block";
+                            firstPayeeDiv.style.display = "block";
+
+                            firstNmContainerDiv.style.display = "none";
+                            LastNmContainerDiv.style.display = "none";
+                            MiddleNmContainerDiv.style.display = "none";
+                            SuffixContainerDiv.style.display = "none";
+                            $('#FirstPayeeNm').val('');
+                            $('#SecondPayeeNm').val('');
+                            $('#FirstNm').val('');
+                            $('#LastNm').val('');
+                            $('#MiddleNm').val('');
+                            $('#Suffix').val('');
+                        }
+                        else {
+                            secondPayeeDiv.style.display = "none";
+                            firstPayeeDiv.style.display = "none";
+
+                            firstNmContainerDiv.style.display = "block";
+                            LastNmContainerDiv.style.display = "block";
+                            MiddleNmContainerDiv.style.display = "block";
+                            SuffixContainerDiv.style.display = "block";
+                            $('#FirstNm').val('');
+                            $('#LastNm').val('');
+                            $('#MiddleNm').val('');
+                            $('#Suffix').val('');
+
+                        }
+                    }
+
+                    document.addEventListener("DOMContentLoaded", function () {
+                        // Initial toggle on page load
+
+                        const selectedTINType = document.querySelector('input[name="TINType"]:checked')?.value;
+                        var isValid = false;
+                        if (selectedTINType != null && selectedTINType != undefined && selectedTINType != '') {
+                            if (isValid) {
+                                toggleSecondPayeeField();
+                            }
+                            else {
+                                isValid = true;
+                                const selectedTINType = document.querySelector('input[name="TINType"]:checked')?.value;
+                                const secondPayeeDiv = document.getElementById("secondPayeeContainer");
+                                const firstPayeeDiv = document.getElementById("firstPayeeContainer");
+
+                                const firstNmContainerDiv = document.getElementById("firstNmContainer");
+                                const LastNmContainerDiv = document.getElementById("LastNmContainer");
+                                const MiddleNmContainerDiv = document.getElementById("MiddleNmContainer");
+                                const SuffixContainerDiv = document.getElementById("SuffixContainer");
+
+
+
+                                if (selectedTINType === "EIN") {
+                                    secondPayeeDiv.style.display = "block";
+                                    firstPayeeDiv.style.display = "block";
+                                    firstNmContainerDiv.style.display = "none";
+                                    LastNmContainerDiv.style.display = "none";
+                                    MiddleNmContainerDiv.style.display = "none";
+                                    SuffixContainerDiv.style.display = "none";
+                                    $('#FirstNm').val('');
+                                    $('#LastNm').val('');
+                                    $('#MiddleNm').val('');
+                                    $('#Suffix').val('');
+                                } else if (selectedTINType == null || selectedTINType == undefined || selectedTINType == '') {
+                                    secondPayeeDiv.style.display = "block";
+                                    firstPayeeDiv.style.display = "block";
+
+                                    firstNmContainerDiv.style.display = "none";
+                                    LastNmContainerDiv.style.display = "none";
+                                    MiddleNmContainerDiv.style.display = "none";
+                                    SuffixContainerDiv.style.display = "none";
+
+                                    $('#FirstNm').val('');
+                                    $('#LastNm').val('');
+                                    $('#MiddleNm').val('');
+                                    $('#Suffix').val('');
+                                    $('#FirstPayeeNm').val('');
+                                    $('#SecondPayeeNm').val('');
+                                }
+                                else {
+                                    secondPayeeDiv.style.display = "none";
+                                    firstPayeeDiv.style.display = "none";
+
+                                    firstNmContainerDiv.style.display = "block";
+                                    LastNmContainerDiv.style.display = "block";
+                                    MiddleNmContainerDiv.style.display = "block";
+                                    SuffixContainerDiv.style.display = "block";
+                                    $('#FirstPayeeNm').val('');
+                                    $('#SecondPayeeNm').val('');
+                                }
+                            }
+
+                        }
+                        else {
+                            const secondPayeeDiv = document.getElementById("secondPayeeContainer");
+                            const firstPayeeDiv = document.getElementById("firstPayeeContainer");
+
+                            const firstNmContainerDiv = document.getElementById("firstNmContainer");
+                            const LastNmContainerDiv = document.getElementById("LastNmContainer");
+                            const MiddleNmContainerDiv = document.getElementById("MiddleNmContainer");
+                            const SuffixContainerDiv = document.getElementById("SuffixContainer");
+
+                            secondPayeeDiv.style.display = "block";
+                            firstPayeeDiv.style.display = "block";
+
+                            firstNmContainerDiv.style.display = "none";
+                            LastNmContainerDiv.style.display = "none";
+                            MiddleNmContainerDiv.style.display = "none";
+                            SuffixContainerDiv.style.display = "none";
+                            $('#FirstNm').val('');
+                            $('#LastNm').val('');
+                            $('#MiddleNm').val('');
+                            $('#Suffix').val('');
+                            $('#FirstPayeeNm').val('');
+                            $('#SecondPayeeNm').val('');
+                        }
+                        // Add click/change listener to all radio buttons
+                        document.querySelectorAll('input[name="TINType"]').forEach(function (radio) {
+                            radio.addEventListener("change", toggleSecondPayeeField);
+                        });
+                    });
+
+
+                    function submit_form(form_id, action_url) {
+                        form_tag = document.getElementById(form_id)
+
+                        const dateInput = form_tag.querySelector('input[name="B2DateWon"]');
+                        if (dateInput && dateInput.value) {
+                            const [year, month, day] = dateInput.value.split("-");
+                            const formattedDate = `${month}/${day}/${year}`;
+                            $('#B2DateWon1').val(formattedDate);
+                        }
+                        else {
+                            $('#B2DateWon1').val('');
+                        }
+
+                        form_tag.setAttribute('action', action_url)
+
+                        form_tag.submit()
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const dateInput = document.querySelector('input[name="B2DateWon"]');
+                        if (dateInput) {
+                            const today = new Date();
+                            const yyyy = today.getFullYear();
+                            const mm = String(today.getMonth() + 1).padStart(2, '0');
+                            const dd = String(today.getDate()).padStart(2, '0');
+                            const maxDate = `${yyyy}-${mm}-${dd}`;
+                            dateInput.max = maxDate;
+                        }
+                    });
+                </script>
+                {% if 'validate' in button_urls %}
+                <div class="p-2">
+                    <button class="btn btn_primary btn_md"
+                        onclick="submit_form('w2g_request', '{{button_urls.validate}}')">
+                        Validate Form
+                    </button>
+                </div>
+                {% endif %}
+
+                <div>
+                    <button class="btn btn_primary btn_md"
+                        onclick="submit_form('w2g_request', '{{button_urls.submit}}')">
+                        {{ button_label }}
+                    </button>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+
+    <div class="d-flex justify-content-start align-items-center">
+        <button class="btn_back mt-3 mb-3">
+            <a href="{{ button_urls.back }}" class="text-decoration-none text-dark">
+                Back
+            </a>
+        </button>
+    </div>
+
+    <div class="api-response-popup">
+        {% if api_res %}
+        <script>
+            $(() => {
+                $('#FormW2GModalToggle').modal('show')
+            })
+        </script>
+        {% endif %}
+
+
+        {% if api_res.StatusCode != 200 %}
+
+        {% call(content) popup.dom(id='FormW2GModalToggle', top='45px') %}
+
+        {% if content == 'header' %}
+
+        <div class="popup-head-content">
+            <h5 class="modal-title" id="exampleModalToggleLabel">Response / Status</h5>
+        </div>
+
+        {% endif %}
+
+        {% if content == 'body' %}
+
+        <div class="popup-body-content">
+
+            {% set status200 = api_res.StatusCode == 200 %}
+            {% set classes = 'text-center border-radious-bottom-right align-top' %}
+            {%
+            set status_table = {
+            'header': [
+            {'n':'Status Code', 'k': 'StatusCode'},
+            {'n':'Status Name', 'k': 'StatusName'},
+            {
+            'n':'Status Message',
+            'k': 'StatusMessage',
+            'td_class': classes + ' text-success' if status200 else classes + ' text-danger'
+            }
+            ],
+            'data': [api_res]
+            }
+            %}
+
+            {{ table.dom(status_table.header, status_table.data) }}
+
+            <div class="errorRecords">
+                <h2 class="tabel-sub-head">Error Records</h2>
+                <div class="table-container mb-3">
+                    <table>
+                        <tr class="fw-600 ">
+                            <th class="text-center fw-600">Id</th>
+                            <th class="text-center">Name</th>
+                            <th class="text-center">Message</th>
+                            <th class="text-center">Type</th>
+                        </tr>
+                        <tbody id="errorsTBody">
+                            {% if 'FormW2GRecords' in api_res and api_res.FormW2GRecords.ErrorRecords %}
+
+                            {% set ErrorRecords = api_res.FormW2GRecords.ErrorRecords %}
+
+                            {% for err_rec in ErrorRecords %}
+                            {% for err in err_rec.Errors %}
+                            <tr>
+                                <td class="text-center align-top">{{ err.Id }}</td>
+                                <td class="text-center align-top">{{ err.Name }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">{{ err.Message }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">
+                                    <span class="error-label">Error</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endfor %}
+
+                            {% elif 'Form1099Records' in api_res and api_res.Form1099Records.ErrorRecords %}
+
+                            {% set ErrorRecords = api_res.Form1099Records.ErrorRecords %}
+
+                            {% for err_rec in ErrorRecords %}
+                            {% for err in err_rec.Errors %}
+                            <tr>
+                                <td class="text-center align-top">{{ err.Id }}</td>
+                                <td class="text-center align-top">{{ err.Name }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">{{ err.Message }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">
+                                    <span class="error-label">Error</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endfor %}
+
+                            {% elif 'FormW2GRecords' not in api_res and api_res.ErrorRecords %}
+                            <!-- validation errors -->
+                            {% set ErrorRecords = api_res.ErrorRecords %}
+
+                            {% for err_rec in ErrorRecords %}
+                            {% for err in err_rec.Errors %}
+                            <tr>
+                                <td class="text-center align-top">{{ err.Id }}</td>
+                                <td class="text-center align-top">{{ err.Name }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">{{ err.Message }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">
+                                    <span class="error-label">Error</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endfor %}
+
+                            {% elif 'Errors' in api_res and api_res.Errors %}
+
+                            {% set Errors = api_res.Errors %}
+
+                            {% for err in Errors %}
+                            <tr>
+                                <td class="text-center align-top">{{ err.Id }}</td>
+                                <td class="text-center align-top">{{ err.Name }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">{{ err.Message }}</td>
+                                <td class="text-center border-radious-bottom-right align-top">
+                                    <span class="error-label">Error</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            {% endif %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        {% endif %}
+
+        {% endcall %}
+
+        {% else %}
+
+        {% if 'FormW2GRecords' in api_res and api_res.FormW2GRecords.SuccessRecords %}
+        {% set success_records = api_res.FormW2GRecords.SuccessRecords %}
+        {% endif %}
+
+        {% call(content) popup.dom(id='FormW2GModalToggle', top='45px', close_btn=False) %}
+        {% if content == 'header' %}
+
+        <div class="popup-head-content">
+            <h5 class="modal-title" id="exampleModalToggleLabel">Response / Status</h5>
+
+
+            <!-- data-bs-dismiss="modal" aria-label="Close" -->
+            <a {% if success_records and button_urls.model_close %} href="{{ button_urls.model_close }}" {% else %}
+                data-bs-dismiss="modal" aria-label="Close" {% endif %} type="button" class="
+                                    btn-close bg-white rounded-circle border-0 fw-bold 
+                                    position-absolute end-n-10 top-n-13 modal-close button-hide fs-18 fw-500 text-decoration-none
+                                    d-flex align-items-center justify-content-center
+                                " style="padding: 7px 7px 5px;">
+                X
+            </a>
+
+        </div>
+
+        {% endif %}
+        {% if content == 'body' %}
+
+        <div class="popup-body-content">
+
+            {% set status200 = api_res.StatusCode == 200 %}
+            {% set classes = 'text-center border-radious-bottom-right align-top' %}
+            {%
+            set status_table = {
+            'header': [
+            {'n':'Status Code', 'k': 'StatusCode'},
+            {'n':'Status Name', 'k': 'StatusName'},
+            {
+            'n':'Status Message',
+            'k': 'StatusMessage',
+            'td_class': classes + ' text-success' if status200 else classes + ' text-danger'
+            }
+            ],
+            'data': [api_res]
+            }
+            %}
+
+            {{ table.dom(status_table.header, status_table.data) }}
+
+
+            {% if 'FormW2GRecords' in api_res and api_res.FormW2GRecords.SuccessRecords %}
+
+            <div class="successRecords">
+
+                <h2 class="tabel-sub-head mt-4">Success Records</h2>
+
+                <div class="success_table table-container m-3">
+                    <table>
+                        <thead>
+                            <tr class="fw-600">
+                                <th class="text-center bg-dull-blue">Business Id</th>
+                                <th class="text-center bg-dull-blue">SubmissionId</th>
+                                <th class="text-center bg-dull-blue">RecordId</th>
+                            </tr>
+                        </thead>
+                        <tbody id="successRecordsTBody">
+                            {% for succ_rec in success_records %}
+                            <tr>
+                                <td class="text-center align-top">{{ api_res.BusinessId }}</td>
+                                <td class="text-center align-top">{{ api_res.SubmissionId }}</td>
+                                <td class="text-center align-top">{{ succ_rec.RecordId }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="Postal_and_OnlineAccess">
+
+                    {% for succ_rec in success_records %}
+
+                    {% if succ_rec.Postal and succ_rec.Postal.Status != 'CREATED' %}
+                    <h2 class="tabel-sub-head mt-4">Postal (Warning)</h2>
+
+                    <div class="postal">
+                        {%
+                        set t_header = [
+                        {'n': 'Status', 'k': 'Status'},
+                        {'n': 'StatusTs', 'k': 'StatusTs'},
+                        {'n': 'Info', 'k': 'Info'}
+                        ]
+                        %}
+                        {{ table.dom(t_header, [succ_rec.Postal]) }}
+                    </div>
+                    {% endif %}
+
+                    {% if succ_rec.OnlineAccess and succ_rec.OnlineAccess.Status != 'CREATED' %}
+                    <h2 class="tabel-sub-head mt-4">Online Access (Warning)</h2>
+
+                    <div class="OnlineAccess">
+                        {%
+                        set t_header = [
+                        {'n': 'Status', 'k': 'Status'},
+                        {'n': 'Email', 'k': 'Email'},
+                        {'n': 'Info', 'k': 'Info'}
+                        ]
+                        %}
+                        {{ table.dom(t_header, [succ_rec.OnlineAccess]) }}
+                    </div>
+                    {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+
+        </div>
+
+        {% endif %}
+        {% endcall %}
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endmacro %}
+
+{% macro styles() %}
+<style>
+    span.error-label {
+        background-color: #e6000d;
+        color: #fff;
+        padding: 1px 5px 2px 5px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+</style>
+{% endmacro %}
+
+{% macro scripts() %}
+
+<script purpose="assign_options_for_select_tags">
+
+    function assign_options_for_select_tags() {
+        set_options_to_selectTag(selectTagId = 'selectCountry', countries, countryShorts)
+        set_options_to_selectTag(selectTagId = 'selectUsState', states, statesShort)
+        set_options_to_selectTag(selectTagId = 'selectState1', states, statesShort)
+        set_options_to_selectTag(selectTagId = 'selectState2', states, statesShort)
+        set_options_to_selectTag(selectTagId = 'AL-International-State-ID', states, statesShort)
+    }
+
+</script>
+
+<script purpose="To toggle form elements and its options">
+
+    function showAssociatedDivForAddress(checkBoxElem) {
+        var foreignDivs = $('.foreignDiv')
+        var usDivs = $('.usDiv')
+
+        if (checkBoxElem.checked) {
+            // show foreign
+            foreignDivs.removeClass('d-none')
+            usDivs.addClass('d-none')
+        } else {
+            // show US
+            foreignDivs.addClass('d-none')
+            usDivs.removeClass('d-none')
+        }
+    }
+
+    firstSelectVal = ''
+    secondSelectVal = ''
+    function showMatchingDivForRecon1(selectTag) {
+        firstSelectVal = selectTag.value
+        checkAndToggleRecon(firstSelectVal, secondSelectVal)
+    }
+    function showMatchingDivForRecon2(selectTag) {
+        secondSelectVal = selectTag.value
+        checkAndToggleRecon(firstSelectVal, secondSelectVal)
+    }
+
+    function checkAndShowDebitDiv(selectTag) {
+        if (selectTag.value == 'EFT Debit') {
+            $('.eft-debit-div').removeClass('d-none')
+        } else {
+            $('.eft-debit-div').addClass('d-none')
+        }
+    }
+
+    function checkAndShowIsInternACHTxnDiv(checkBoxTag) {
+        if (checkBoxTag.checked) {
+            $('.IsInternationalACHTxn-div').removeClass('d-none')
+        } else {
+            $('.IsInternationalACHTxn-div').addClass('d-none')
+        }
+    }
+
+</script>
+
+<script purpose="show_and_hide divs">
+
+    function show_and_hide_divs_at_init() {
+        // US and Foreign Divs toggle
+        checkIsForeign = document.getElementById('checkIsForeign')
+        showAssociatedDivForAddress(checkIsForeign)
+
+        // AL and WV Divs toggle
+        selectState1 = document.getElementById('selectState1')
+        selectState2 = document.getElementById('selectState2')
+        showMatchingDivForRecon1(selectState1)
+        showMatchingDivForRecon2(selectState2)
+    }
+
+</script>
+
+{% endmacro %}

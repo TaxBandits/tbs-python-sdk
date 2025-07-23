@@ -1,0 +1,304 @@
+{% macro dom(table_id, form_id, table_configs, name, serializer_func, add_limit=0, form_data={}, si_no=False, scroll=False) %}
+
+    <div class="{% if scroll %} overflow-auto overflow-x-hidden h-50 {% endif %} " id="{{table_id}}">
+
+        <table class="table mt-4 table-bordered text-center">
+
+            <thead>
+                <tr class="bg-gray">
+                    {% if si_no %}
+                        <th class="fw-500 text-dark" scope="col" style="width: 20px;">S.No</th>
+                    {% endif %}
+
+                    {% for tc in table_configs %}
+                        <th class="fw-500 text-dark" scope="col">
+
+                            {% if tc.req %} <span class="text-danger">*</span> {% endif %}
+
+                            {{ tc.h }}
+
+                        </th>      
+                    {% endfor %}
+
+                    <th class="fw-500 text-dark" scope="col" style="width: 20px;">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% if form_data %}
+                    {% for fd in form_data %}
+                        <tr class="align-middle table_row">
+
+                            {% set fd_loop = loop %}
+
+                            {% if si_no %}
+                                <td class="text-center row-count" style="width: 20px;">{{loop.index}}</td>
+                            {% endif %}
+
+                            {% for tc in table_configs %}
+                                
+                                <td>
+                                    {% if tc.type == 'text' %}
+                                        <input type="text" 
+                                            name="{{tc.name}}"
+                                            {% if tc.placeholder %}
+                                                placeholder="{{tc.placeholder}}" 
+                                            {% endif %}
+                                            class="form-control"
+                                            {% if fd[tc.name] %}
+                                                value="{{fd[tc.name]}}"
+                                            {% endif %}
+                                        >
+                                    {% endif %}
+                                
+                                    {% if tc.type == 'number' %}
+                                        <input type="number" 
+                                            name="{{tc.name}}" 
+                                            {% if tc.placeholder %}
+                                                placeholder="{{tc.placeholder}}" 
+                                            {% endif %}
+                                            class="form-control"
+                                            {% if fd[tc.name] %}
+                                                value="{{fd[tc.name]}}"
+                                            {% endif %}
+                                        >
+                                    {% endif %}
+
+                                    {% if tc.type == 'select' %}
+
+                                        {% if 'id' in tc %}
+                                            {% set select_tag_id = tc.id + '-' + fd_loop.index|string %}
+                                        {% else %}
+                                            {% set select_tag_id = 'select-' + tc.name + '-' + fd_loop.index|string %}
+                                        {% endif %}
+
+                                        {% if fd[tc.name] %}
+                                            <script>
+                                                $(()=>{
+                                                    setTimeout(() => {
+                                                        select_option_for_selectTag(selectTagId='{{select_tag_id}}', '{{fd[tc.name]}}')
+                                                    }, 150)
+                                                })
+                                            </script>
+                                        {% endif %}
+
+                                        <select 
+                                            class="form-control form-select" 
+                                            name="{{tc.name}}" 
+                                            id="{{select_tag_id}}"
+                                            {% if tc.get('w') %} style="width: {{tc.w}};" {% endif %}
+                                        >
+                                            <option selected value="">{{tc.placeholder}}</option>
+                                            {% if tc.options %}
+                                                {% for opt in tc.options %}
+                                                    <option value="{{opt}}">{{opt}}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                        
+                                    {% endif %}
+                                </td>
+
+                            {% endfor %}
+
+                            {% if fd_loop.index == 2 %}
+                                <script>
+                                    $(()=>{
+                                        $('.delete-bin-btn').show()
+                                    })
+                                </script>
+                            {% endif %}
+                            <td style="width: 20px;">
+                                <button type="button" class="delete-bin-btn btn-rounded-hover rounded-circle p-2 lh-1" 
+                                    onclick="removeRow(this, {{add_limit}})"
+                                    style="display: none;"
+                                >
+                                    <i class="mdi mdi-delete-outline text-muted fs-4" data-bs-toggle="tooltip" data-bs-placement="bottom" role="button" aria-label="delete" data-bs-original-title="delete" title="Delete"></i>
+                                </button>
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="align-middle table_row">
+                        
+                        {% if si_no %}
+                            <td class="text-center row-count" style="width: 20px;">1</td>
+                        {% endif %}
+
+                        {% for tc in table_configs %}
+                            
+                            <td>
+                                {% if tc.type == 'text' %}
+                                    <input type="text" 
+                                        name="{{tc.name}}" 
+                                        {% if tc.placeholder %}
+                                            placeholder="{{tc.placeholder}}" 
+                                        {% endif %}
+                                        class="form-control"
+                                        {% if tc.value %}
+                                            value="{{tc.value}}"
+                                        {% endif %}
+                                    >
+                                {% endif %}
+
+                                {% if tc.type == 'number' %}
+                                    <input type="number" 
+                                        name="{{tc.name}}" 
+                                        {% if tc.placeholder %}
+                                            placeholder="{{tc.placeholder}}" 
+                                        {% endif %}
+                                        class="form-control"
+                                        {% if tc.value %}
+                                            value="{{tc.value}}"
+                                        {% endif %}
+                                    >
+                                {% endif %}
+
+                                {% if tc.type == 'select' %}
+                                    <select 
+                                        class="form-control form-select" 
+                                        name="{{tc.name}}" 
+                                        {% if tc.get('w') %} style="width: {{tc.w}};" {% endif %}
+                                    >
+                                        <option selected value="">{{tc.placeholder}}</option>
+                                        {% if tc.options %}
+                                            {% for opt in tc.options %}
+                                                <option value="{{opt}}">{{opt}}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                {% endif %}
+                            </td>
+
+                        {% endfor %}
+                        <td style="width: 20px;">
+                            <button type="button" class="delete-bin-btn btn-rounded-hover rounded-circle p-2 lh-1" 
+                                onclick="removeRow(this, {{add_limit}})"
+                                style="display: none;"
+                            >
+                                <i class="mdi mdi-delete-outline text-muted fs-4" data-bs-toggle="tooltip" data-bs-placement="bottom" role="button" aria-label="delete" data-bs-original-title="delete" title="Delete"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% endif %}
+
+            </tbody>
+
+            <tr class="btn-row-tr">
+                <td colspan="6">
+                    <button type="button" class="add-plus-btn btn-rounded-hover rounded-circle lh-1 ms-2 float-start"
+                        onclick="addRow(this, {{add_limit}})"
+                        {% if form_data and form_data|length == add_limit %}
+                            style="display: none;"
+                        {% endif %}
+                    >
+                        <i class="mdi mdi-plus-circle-outline text-muted fs-4" data-bs-toggle="tooltip" data-bs-placement="bottom" role="button" aria-label="delete" data-bs-original-title="Add" title="Add"></i>
+                    </button>
+                </td>
+            </tr>
+
+        </table>
+    </div>
+
+    <script>
+
+        function {{serializer_func}}(){
+            console.log('tr in {{serializer_func}} in table dynamic');
+            
+            var form_tag = document.getElementById('{{form_id}}')
+            var table_wrapper_tag = document.getElementById('{{table_id}}')
+            tbody_tag = $(table_wrapper_tag).find('tbody')[0]
+            table_rows = $(tbody_tag).find('tr')
+
+            ret_list = []
+            Array.from(table_rows).forEach((tr)=>{
+                tdTags = $(tr).find('td')
+                
+                ret_obj = {}
+                Array.from(tdTags).forEach(td=>{
+                    inp_tag = $(td).find('[name]')[0]
+
+                    if(inp_tag){
+                        inp_name = inp_tag.getAttribute('name')
+                        ret_obj[inp_name] = inp_tag.value
+                    }
+                })
+
+                ret_list.push(ret_obj)
+            })
+            
+            input1 = document.createElement('input')
+            input1.type = 'hidden'
+            input1.name = "{{name}}"
+            input1.value = JSON.stringify(ret_list)
+            table_wrapper_tag.append(input1)
+        }
+
+        // document.getElementById('{{form_id}}').addEventListener("submit", submitHappenedOnForm);
+        // function submitHappenedOnForm(e){
+        //      e.preventDefault()
+        //      form_tag.submit()
+        // }
+    </script>
+{% endmacro %}
+
+{% macro scripts() %}
+
+    <script>
+
+        function addRow(button, addLimit){
+            
+            var table = $(button).closest('table')
+            var table_body = table.find('tbody')[0]
+            var table_row = $(table_body).find('tr')[0]
+
+            var next_row = table_row.cloneNode(true)
+            table_body.append(next_row)
+
+            $(next_row).find('input').val('')
+
+            table.find('.delete-bin-btn').show()
+
+            // row_number_organizer(button)
+            number_of_rows = row_number_organizer(table)
+
+            if(addLimit && number_of_rows == addLimit){
+                table.find('.add-plus-btn').hide()
+            }
+        }
+
+        function removeRow(rmBtn, addLimit){
+            
+            table = $(rmBtn).closest('table')
+            table_row = $(rmBtn).closest('.table_row')
+            table_row.remove()
+            
+            number_of_rows = row_number_organizer(table)
+
+            if(number_of_rows == 1){
+                table.find('.delete-bin-btn').hide()
+            }
+
+            if(addLimit && number_of_rows < addLimit){
+                table.find('.add-plus-btn').show()
+            }
+        }
+
+        function row_number_organizer(table){
+
+            var table_body = table.find('tbody')[0]
+            var table_rows = $(table_body).find('tr')
+
+            Array.from(table_rows).forEach((tr, idx)=>{
+                row_no = idx+1
+                row_count_td = $(tr).find('.row-count')
+                row_count_td.text(row_no)                
+            })
+
+            return table_rows.length
+        }
+
+    </script>
+{% endmacro %}

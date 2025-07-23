@@ -1,0 +1,21 @@
+{% extends 'app.html' %}
+
+{% import 'components/business_form.html' as business_form %}
+
+{% block content %}
+    <div class="container">
+        {{ 
+            business_form.dom(
+                title = "Create Business Details",
+                csrf_token = csrf_token,
+                form_data = form_data,
+                button_label = "Create Business",
+                button_urls = {
+                    "submit": url("create-business"),
+                    "back": url("list-business")
+                }, 
+                api_res = api_res,
+            )
+        }}
+    </div>
+{% endblock content %}

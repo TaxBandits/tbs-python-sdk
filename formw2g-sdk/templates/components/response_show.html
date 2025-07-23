@@ -1,0 +1,192 @@
+{% import 'components/popup.html' as popup %}
+{% import 'components/table.html' as table %}
+
+
+{% macro dom(
+    id, title, res, 
+    noStatus=False, specific_dict_key='', sub_title='', 
+    width="auto", top=""
+) %}
+
+
+    <div>
+
+        {% set status200 = res.StatusCode == 200 %}
+
+        {% 
+            set records_exist = (
+                specific_dict_key 
+                and specific_dict_key in res 
+                and res[specific_dict_key]
+            ) 
+        %}
+        {% set success_records_exist = (
+                status200 
+                and records_exist
+                and 'SuccessRecords' in res[specific_dict_key] 
+                and res[specific_dict_key].SuccessRecords 
+            )
+        %}
+        {% 
+            set error_records_exist = (
+                not status200 
+                and records_exist
+                and 'ErrorRecords' in res[specific_dict_key] 
+                and res[specific_dict_key].ErrorRecords
+            )
+        %}
+
+        <script>
+            $(()=>{
+                $('#'+'{{id}}').modal('show')
+            })
+        </script>
+
+        {% call(content) popup.dom(id=id, width="1000px", top="10%") %}
+        
+            {% if content == 'header' %}
+                <h5 class="modal-title changed" id="exampleModalToggleLabel">{{ title }}</h5>
+            {% endif %}
+
+            {% if content == 'body' %}
+                
+                {% if not noStatus %}
+
+                    {% if status200 %}
+                        <h2 class="tabel-sub-head">Success Records</h2>
+                    {% else %}
+                        <h2 class="tabel-sub-head">Error Records</h2>
+                    {% endif %}
+
+                    {{ status_table(res) }}
+
+                {% endif %}
+
+                {% if sub_title %}
+                    <h2 class="tabel-sub-head">{{ sub_title }}</h2>
+                {% elif specific_dict_key %}
+                    <div class="border-top"></div>
+                {% endif %}
+
+                {% if success_records_exist %}
+
+                    <div class="success-from-specific-key">
+
+                        {% set success_records = res[specific_dict_key].SuccessRecords %}
+                            
+                        <div>
+                            {% 
+                                set status_table = {
+                                    'header': [
+                                        {'n':'SequenceId', 'k': 'SequenceId'},
+                                        {'n':'RecordId', 'k': 'RecordId'},
+                                        {'n':'Status', 'k': 'Status'},
+                                        {'n':'StatusTs', 'k': 'StatusTs'}
+                                    ],
+                                    'data': success_records
+                                }
+                            %}
+
+                            {{ table.dom(status_table.header, status_table.data) }}
+                        </div>
+
+                    </div>
+
+                {% elif error_records_exist %}
+                    
+                    <div class="errors-from-specific-key">
+
+                        {% set error_records = res[specific_dict_key].ErrorRecords %}
+
+                        {% for err_rec in error_records %}
+                            
+                            <div class="{% if loop.index>1 %} border-top {% endif %}">
+                                <div class="form-label fw-500 text-muted mt-2">
+                                    <span>Sequence Id : </span>
+                                    <span class="text-dark fw-500 mb-3">{{ err_rec.SequenceId }}</span>
+                                </div>
+                                <div class="form-label fw-500 text-muted mt-2">
+                                    </span>Record Id : </span>
+                                    <span class="text-dark fw-500 mb-3">{{ err_rec.RecordId }}</span>
+                                </div>
+
+                                {{ errors_table(err_rec.Errors) }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% elif 'Errors' in res and res.Errors %}
+
+                    {{ errors_table(res.Errors) }}
+
+                {% elif 'Error' in res and res.Error %}
+                    
+                    {{ errors_table(res.Error) }}
+
+                {% endif %}
+
+            {% endif %}
+
+        {% endcall %}
+    </div>
+    
+{% endmacro %}
+
+{% macro status_table(res) %}
+
+    {% set status200 = res.StatusCode == 200 %}
+
+    {% set classes = "text-center border-radious-bottom-right align-top" %}
+    {% 
+        set status_table = {
+            'header': [
+                {'n':'Status Code', 'k': 'StatusCode'},
+                {'n':'Status Name', 'k': 'StatusName'},
+                {
+                    'n':'Status Message', 'k': 'StatusMessage', 
+                    'td_class': classes + ' text-success' if status200 else classes + ' text-danger'
+                }
+            ],
+            'data': [res]
+        }
+    %}
+
+    {{ table.dom(status_table.header, status_table.data) }}
+{% endmacro %}
+
+{% macro errors_table(Errors) %}
+    
+    {% 
+        set status_table = {
+            'header': [
+                {'n':'Id', 'k': 'Id'},
+                {'n':'Name', 'k': 'Name'},
+                {'n':'Message', 'k': 'Message'}
+            ],
+            'data': Errors
+        }
+    %}
+
+    {{ table.dom(status_table.header, status_table.data) }}
+   
+{% endmacro %}
+
+{% macro error_table(Error) %}
+    
+    {% 
+        set status_table = {
+            'header': [
+                {'n':'Id', 'k': 'Id'},
+                {'n':'Name', 'k': 'Name'},
+                {'n':'Message', 'k': 'Message'}
+            ],
+            'data': [Error]
+        }
+    %}
+
+    {{ table.dom(status_table.header, status_table.data) }}
+    
+{% endmacro %}

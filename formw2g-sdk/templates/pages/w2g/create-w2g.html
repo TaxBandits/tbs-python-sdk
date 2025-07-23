@@ -1,0 +1,65 @@
+{% extends 'app.html' %}
+
+{% import 'components/form1099w2g.html' as form1099w2g %}
+
+{% block content %}
+<div class="container">
+
+    {% set create_url_kwargs = {'b_id': business_id} %}
+
+    {# Extract individual name fields #}
+    {% set first_nm = business['FirstNm'] if business['FirstNm'] is defined else '' %}
+    {% set middle_nm = business['MiddleNm'] if business['MiddleNm'] is defined else '' %}
+    {% set last_nm = business['LastNm'] if business['LastNm'] is defined else '' %}
+    {% set suffix = business['Suffix'] if business['Suffix'] is defined else '' %}
+    {% set business_nm = business['BusinessNm'] if business['BusinessNm'] is defined else '' %}
+    {% set ein_or_ssn = business['EINorSSN'] if business['EINorSSN'] is defined else '' %}
+
+    {# Validate if a field is not None, not empty, and not "none" #}
+    {% macro is_valid(val) %}
+        {{ val is not none and val|string|trim != '' and val|string|lower != 'none' }}
+    {% endmacro %}
+
+    {# Build full name if FirstNm and LastNm are valid #}
+    {% if first_nm and last_nm and first_nm|string|trim and last_nm|string|trim 
+        and first_nm|string|lower != 'none' and last_nm|string|lower != 'none' %}
+
+        {% set full_name = first_nm|string|trim %}
+
+        {% if middle_nm and middle_nm|string|trim and middle_nm|string|lower != 'none' %}
+            {% set full_name = full_name ~ ' ' ~ middle_nm|string|trim %}
+        {% endif %}
+        {% if suffix and suffix|string|trim and suffix|string|lower != 'none' %}
+            {% set full_name = full_name ~ ' ' ~ suffix|string|trim %}
+        {% endif %}
+        {% set full_name = full_name ~ ' ' ~ last_nm|string|trim %}
+        {% set b_name = full_name %}
+    {% else %}
+        {% set b_name = business_nm if business_nm and business_nm|string|trim and business_nm|string|lower != 'none' else '' %}
+    {% endif %}
+
+    {% set model_close_url_kwargs = {
+        'b_id': business_id,
+        'b_name': b_name,
+        'b_tin': ein_or_ssn
+    } %}
+
+    {{
+        form1099w2g.dom(
+            title = "Create FormW2G",
+            button_label = "Create FormW2G",
+            button_urls = {
+                "submit": url("create-w2g", kwargs=create_url_kwargs),
+                "validate": url("validate-w2g", kwargs=create_url_kwargs),
+                "model_close": url("list-w2g", kwargs=model_close_url_kwargs),
+                "back": url("list-business")
+            },
+            csrf_token = csrf_token,
+            business = business,
+            form_data = form_data,
+            api_res = api_res
+        )
+    }}
+
+</div>
+{% endblock content %}

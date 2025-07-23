@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+
+{% block app %}
+
+    <div class="app bg-light-blue h-100vh">
+        <div class="row justify-content-center">
+            
+            <div class="col-md-12 text-center mt-3">
+                <img src="{{ static('images/tbslogo.png') }}" alt="TaxBandits Logo" class="mb-5 logo">
+                <h1>Form W-2G</h1>
+            </div>
+
+            <div class="col-md-4 col-lg-4 mt-4">
+                <div>
+                    <div class="shadow rounded p-4 bg-white card-box  position-relative">
+                        <img class="top-eye-icon" src="{{ static('images/shape-4.png') }}" alt="TaxBandits"/>
+                        <div class="text-center grediant-bg">
+                            <img src="{{ static('images/formw2g.png') }}" class=" w-70px" alt="FormW2-G"/>
+                        </div>
+    
+                        <p class="mt-3 mb-0 text-start">Form W-2G is used to report certain gambling winnings during a given tax year. The types of gambling activities included in this form are horse racing, dog racing, sweepstakes, wagering pools, lotteries, bingo and slot machine winnings, and poker tournament winnings.
+                        </p>
+    
+                        <div class="text-center mt-4">
+                            <a class="btn btn_primary mx-2" href="{{ url('list-business') }}">Form W-2G</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock app %}

@@ -1,0 +1,83 @@
+{% macro dom(id, top='', width="auto", height="auto", close_btn=True) %}
+
+    <div class="modal fade changed" id="{{id}}" 
+        aria-hidden="true" aria-labelledby="exampleModalToggleLabel" 
+        tabindex="-1"
+    >
+        <div class="modal-dialog modal-xl"
+            style="
+                width: {{ width }} !important;
+                {{ 'top: ' + top + ';' if top else '' }}
+            "
+        >
+            <div class="modal-content" id="ModelBody">
+
+                <div class="modal-header">
+                    {{ caller('header') }}
+
+                    {% if close_btn %}
+                        <button type="button"
+                            class="btn-close bg-white rounded-circle border-0 fw-bold position-absolute end-n-10 top-n-13 modal-close button-hide fs-18 fw-500"
+                            data-bs-dismiss="modal" aria-label="Close"
+                            style="padding: 7px 6px 6px;"
+                        >
+                            X
+                        </button>
+                    {% endif %}
+
+                </div>
+
+                <div class="modal-body">
+                    {{ caller('body') }}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endmacro %}
+
+{% macro simple(title, id, show=False, showTime=1, top='', width="auto", height="auto") %}
+
+    {% if show %}
+        <script>
+            $(()=>{
+                setTimeout(()=>{ 
+                    $('#'+'{{id}}').modal('show') 
+                }, Number('{{showTime}}'))
+            })
+        </script>
+    {% endif %}
+
+    <div class="modal fade changed" id="{{id}}" 
+        aria-hidden="true" aria-labelledby="exampleModalToggleLabel" 
+        tabindex="-1"
+    >
+        <div class="modal-dialog modal-xl"
+            style="
+                width: {{ width }} !important;
+                {{ 'top: ' + top + ';' if top else '' }}
+            "
+        >
+            <div class="modal-content" id="ModelBody">
+
+                <div class="modal-header">
+                    <h5 class="modal-title changed" id="exampleModalToggleLabel">{{ title }}</h5>
+
+                    <button type="button"
+                        class="btn-close bg-white rounded-circle border-0 fw-bold position-absolute end-n-10 top-n-13 modal-close button-hide fs-18 fw-500"
+                        data-bs-dismiss="modal" aria-label="Close"
+                        style="padding: 7px 6px 6px;"
+                    >X</button>
+                </div>
+
+                <div class="modal-body">
+                    {{ caller() }}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endmacro %}
+

@@ -1,0 +1,49 @@
+/* orange button */
+.btn.btn_primary, .btn_primary {
+    background: #fb7310;
+    padding: 4px 10px;
+    height: auto !important;
+    color: #fff !important;
+    text-align: left;
+    cursor: pointer !important;
+    font: 600 15px 'Open Sans', sans-serif;
+    border-radius: 4px;
+    border: 1px solid #da6610;
+    text-decoration: none;
+}
+
+.btn.btn_primary:hover {  
+    background-color: #fb7310bf !important;    
+}
+
+/* back button */
+.btn_back {
+    background: #dcdcdc !important;
+    font-weight: 500 !important;
+    color: #333 !important;
+    border: 1px solid #dcdcdc;
+    padding: 1px 10px;
+    border-radius: 4px;
+}
+.btn_back:hover {
+    background-color: #dcdcdc91 !important;
+}
+
+/* circle close button */
+.circle_close {
+    float: right;
+    cursor:pointer;
+    color: #fff;
+    border: 1px solid #AEAEAE;
+    border-radius: 30px;
+    background: #605F61;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 0px;
+    padding: 8px 3px;
+    /* display: inline-block; */
+}
+
+.circle_close:before{
+    content: "×";
+}
