@@ -1,0 +1,45 @@
+{% macro dom(id, title='', placement='start', backdrop=True, show=False, showTime=1, showAtStart=False) %}
+
+    {% if show %}
+        <script>
+            $(()=>{
+                setTimeout(()=>{
+                    document.getElementById('{{id}}').classList.add('show')
+                }, Number('{{showTime}}'))
+            })
+        </script>
+    {% endif %}
+
+    <div 
+        class="offcanvas offcanvas-{{placement}} w-50 {% if showAtStart %} show {% endif %}" 
+        id="{{id}}" 
+        data-bs-backdrop="{{backdrop}}" 
+        tabindex="-1" 
+        aria-labelledby="{{id}}Label"
+    >
+
+        <div class="offcanvas-header bg-secondary">
+            {% if title %}
+                <h5 class="offcanvas-title text-white" id="{{id}}Label">{{title}}</h5>
+            {% else %}
+                {{ caller('header') }}                
+            {% endif %}
+            <button type="button"
+                class="btn-close bg-white rounded-circle border-0 fw-bold position-absolute end-n-10 top-n-13 modal-close button-hide fs-18 fw-500 m-0"
+                data-bs-dismiss="offcanvas" aria-label="Close"
+                style="padding: 7px 6px 6px;"
+            >X</button>
+            <!-- <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button> -->
+        </div>
+
+        <div class="offcanvas-body">
+            {% if title %}
+                {{ caller() }}            
+            {% else %}
+                {{ caller('body') }}
+            {% endif %}
+        </div>
+        
+    </div>
+
+{% endmacro %}

@@ -1,0 +1,645 @@
+{% extends 'app.html' %}
+
+{% import 'components/popup.html' as popup %}
+{% import 'components/offcanvas.html' as offcanvas %}
+{% import 'components/table.html' as table %}
+{% import 'components/response_show.html' as response_show %}
+
+
+{% block content %}
+
+<div class="container">
+
+    <div class="fs-20 text-dark text-center">
+        <h4 class="head-1 fw-bolder">List of Form W-2Gs</h4>
+    </div>
+
+    <div class="d-flex align-items-center fs-20 text-dark justify-content-between">
+        <div>
+            <h4 class="head-1 me-3 fw-bolder d-inline-block" id="hBusinessName">
+                {{ business_name }}
+            </h4>
+            {% set label = 'EIN' if business_tin.count('-') == 1 else 'SSN' %}
+            <span class="text-muted fs-14" id="spanEinOrSnn">( {{ label }} : {{ business_tin }} )</span>
+        </div>
+
+    </div>
+    <div class="heading-bottom-line position-relative pb-0 mb-3"></div>
+
+    {% if form_list %}
+    <div class="overflow-auto h-50">
+        <table class="table mt-4 table-bordered text-center" id="Requests_table">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>SubmissionId</th>
+                    <th>RecordId</th>
+                    <th>RecipientId</th>
+                    <th>Recipient Name</th>
+                    <th>First Name</th>
+                    <th>Middle Name</th>
+                    <th>Suffix</th>
+                    <th>Last Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in form_list %}
+                <tr>
+                    <td class="taL align-middle">{{ loop.index }}</td>
+                    <td class="taL align-middle">{{ form.SubmissionId }}</td>
+                    <td class="taL align-middle">{{ form.Recipient.RecordId }}</td>
+                    <td class="taL align-middle">{{ form.Recipient.RecipientId }}</td>
+                    <td class="taL align-middle">{{ form.Recipient.RecipientNm | default('-', true) }}</td>
+                    <td class="taL align-middle">{{ form.Recipient.FirstNm | default('-', true) }}</td>
+                    <td class="taL align-middle">{{ form.Recipient.MiddleNm | default('-', true) }}</td>
+                    <td class="taL align-middle">{{ form.Recipient.Suffix | default('-', true) }}</td>
+                    <td class="taL align-middle">{{ form.Recipient.LastNm | default('-', true) }}</td>
+                    <td class="text-center align-middle">
+
+                        <div class="d-flex align-items-center">
+
+                            <div class="ms-2" style="height: 17px;">
+
+                                {%
+                                set url_kwargs = {
+                                'b_id': business_id,
+                                'sub_id': form.SubmissionId,
+                                'rec_id': form.Recipient.RecordId
+                                }
+                                %}
+
+                                <a href="{{ url('update-w2g', kwargs=url_kwargs) }}"
+                                    class="btn btn-primary status-btn btn_smm">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0"
+                                        viewBox="0 0 576 512" height="1em" width="1em"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M402.6 83.2l90.2 90.2c3.8 3.8 3.8 10 0 13.8L274.4 405.6l-92.8 10.3c-12.4 1.4-22.9-9.1-21.5-21.5l10.3-92.8L388.8 83.2c3.8-3.8 10-3.8 13.8 0zm162-22.9l-48.8-48.8c-15.2-15.2-39.9-15.2-55.2 0l-35.4 35.4c-3.8 3.8-3.8 10 0 13.8l90.2 90.2c3.8 3.8 10 3.8 13.8 0l35.4-35.4c15.2-15.3 15.2-40 0-55.2zM384 346.2V448H64V128h229.8c3.2 0 6.2-1.3 8.5-3.5l40-40c7.6-7.6 2.2-20.5-8.5-20.5H48C21.5 64 0 85.5 0 112v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V306.2c0-10.7-12.9-16-20.5-8.5l-40 40c-2.2 2.3-3.5 5.3-3.5 8.5z">
+                                        </path>
+                                    </svg>
+                                </a>
+
+                            </div>
+
+                            <div>
+
+                                <button type="button" class="btn-rounded-hover rounded-circle p-2 lh-1 border-0"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="mdi mdi-dots-vertical text-muted fs-4"></i>
+                                </button>
+
+                                <ul class="dropdown-menu">
+
+                                    {%
+                                    set get_w2g_url_kwargs = {
+                                    'b_id': business_id,
+                                    'b_name': business_name,
+                                    'b_tin': business_tin,
+                                    'sub_id': form.SubmissionId,
+                                    'rec_id': form.Recipient.RecordId
+                                    }
+                                    %}
+
+                                    {% set form_id = 'form-1099-menu-' + loop.index|string %}
+
+                                    <form method="POST" action="{{ url('get-w2g', kwargs=get_w2g_url_kwargs) }}"
+                                        id="{{form_id}}" style="margin-block-end: 0;">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                        <input type="hidden" name="action">
+                                        <li>
+                                            <button class="dropdown-item text-dark"
+                                                onclick="setValueInInput('{{form_id}}', 'action', 'status')">
+                                                View Status
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item text-dark"
+                                                onclick="setValueInInput('{{form_id}}', 'action', 'draft-pdf-url')">
+                                                Request Draft Pdf Url
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item text-dark"
+                                                onclick="setValueInInput('{{form_id}}', 'action', 'pdf-url')">
+                                                Request Pdf Url
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item text-dark"
+                                                onclick="setValueInInput('{{form_id}}', 'action', 'transmit')">
+                                                Transmit
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item text-dark"
+                                                onclick="setValueInInput('{{form_id}}', 'action', 'delete')">
+                                                Delete
+                                            </button>
+                                        </li>
+                                    </form>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+
+    </div>
+    {% else %}
+    <div class="text-center">
+        <p>There are no W-2Gs forms created under this business. Click "Create FormW2G" to create a new Form W-2G.</p>
+        <a href="{{ url('create-w2g', kwargs={'b_id': business_id}) }}" class="btn btn_primary shadow btn_md">
+            Create FormW2G
+        </a>
+    </div>
+    {% endif %}
+
+    <a href="{{ url('list-business') }}">
+        <button class="btn_back mt-3 mb-3">
+            Back
+        </button>
+    </a>
+
+    <div class="api-responses-popups">
+
+        {% if form_status_res %}
+        {% set fs_res = form_status_res %}
+        <div>
+            <script>
+                $(() => {
+                    $('#formStatusModalToggle').modal('show')
+                })
+            </script>
+
+            {% call(content) popup.dom(id='formStatusModalToggle', width="1030px") %}
+
+            {% if content == 'header' %}
+            <h5 class="modal-title changed" id="exampleModalToggleLabel">Status Response</h5>
+            {% endif %}
+
+            {% if content == 'body' %}
+
+            {% set status200 = fs_res.StatusCode == 200 %}
+
+            {{ response_show.status_table(fs_res) }}
+
+            <div class="d-flex justify-content-between align-items-center p-3">
+
+                <div>
+                    <div class="form-label fw-500 text-muted mb-0">Business Id</div>
+                    <div class="text-dark fw-600 mb-3">{{ fs_res.BusinessId }}</div>
+                </div>
+                <div>
+                    <div class="form-label fw-500 text-muted mb-0">Submission Id</div>
+                    <div class="text-dark fw-600 mb-3">{{ fs_res.SubmissionId }}</div>
+                </div>
+                <div>
+                    <div class="form-label fw-500 text-muted mb-0">Payer Ref</div>
+                    <div class="text-dark fw-600 mb-3">
+                        {{ fs_res.PayerRef if fs_res.PayerRef else '-' }}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="border border-1 rounded-4px">
+
+                <div class="d-flex justify-content-between align-items-center px-2 rounded-4px bg-grey">
+                    <div class="fs-6 p-1 fw-bold">Success Records</div>
+                </div>
+
+                {% if 'Form1099Records' in fs_res %}
+                <div class="Records-Show">
+                    {% set SuccessRecords = fs_res.Form1099Records.SuccessRecords %}
+                    {% if SuccessRecords %}
+                    {% for suc_rec in SuccessRecords %}
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom-1">
+                        <div>
+                            <div class="form-label fw-500 text-muted mb-0">SequenceId</div>
+                            <div class=" text-dark fw-600">{{ suc_rec.SequenceId }}</div>
+                        </div>
+                        <div>
+                            <div class="form-label fw-500 text-muted mb-0">RecipientId</div>
+                            <div class="text-dark fw-600">{{ suc_rec.RecipientId }}</div>
+                        </div>
+                        <div>
+                            <div class="fs-6 fw-500 text-muted mb-0">RecordId</div>
+                            <div class="text-dark fw-600 text-center">{{ suc_rec.RecordId }}</div>
+                        </div>
+                    </div>
+
+                    {% set FederalReturn = suc_rec.FederalReturn %}
+                    {% if FederalReturn %}
+                    <div class="mb-3 border-top px-4">
+                        <div class="fs-5 mt-2 mb-2">Federal Return</div>
+
+                        <div class="pb-2 row">
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted  mb-0">Status</div>
+                                <div class="fw-bold text-dark">{{ FederalReturn.Status }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted mb-0">StatusTs</div>
+                                <div class="fw-bold text-dark">{{ FederalReturn.StatusTs }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex">
+                                    <div class="pe-3">
+                                        <div class="form-label fw-500 text-muted mb-0">Info</div>
+                                        <div class="fw-bold text-dark">
+                                            {% if FederalReturn.Info %}
+                                            <span class="text-center">{{ FederalReturn.Info }}</span>
+                                            {% else %}
+                                            <span class="text-center">-</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% set Postal = suc_rec.Postal %}
+                    {% if Postal %}
+                    <div class="mb-3 border-top px-4">
+                        <div class="fs-5 mt-2 mb-2">Postal Mailing</div>
+
+                        <div class="pb-2 row">
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted  mb-0">Status</div>
+                                <div class="fw-bold text-dark">{{ Postal.Status }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted mb-0">StatusTs</div>
+                                <div class="fw-bold text-dark">{{ Postal.StatusTs }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex">
+                                    <div class="pe-3">
+                                        <div class="form-label fw-500 text-muted mb-0">Info</div>
+                                        <div class="fw-bold text-dark">
+                                            {% if Postal.Info %}
+                                            <span class="text-center">{{ Postal.Info }}</span>
+                                            {% else %}
+                                            <span class="text-center">-</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% set OnlineAccess = suc_rec.OnlineAccess %}
+                    {% if OnlineAccess %}
+                    <div class="mb-3 border-top px-4">
+                        <div class="fs-5 mt-2 mb-2">Online Access</div>
+
+                        <div class="pb-2 row">
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted  mb-0">Status</div>
+                                <div class="fw-bold text-dark">{{ OnlineAccess.Status }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted mb-0">Email</div>
+                                <div class="fw-bold text-dark text-truncate" title="{{ OnlineAccess.Email }}">
+                                    {{ OnlineAccess.Email }}
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex">
+                                    <div class="pe-3">
+                                        <div class="form-label fw-500 text-muted mb-0">Info</div>
+                                        <div class="fw-bold text-dark">
+                                            {% if OnlineAccess.Info %}
+                                            <span class="text-center">{{ OnlineAccess.Info }}</span>
+                                            {% else %}
+                                            <span class="text-center">-</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% set StateReturns = suc_rec.StateReturns %}
+                    {% if StateReturns %}
+                    <div class="mb-3 border-top px-4">
+                        <div class="fs-5 mt-2 mb-2">State Return</div>
+
+                        <div class="pb-2 row">
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted  mb-0">State Code</div>
+                                <div class="fw-bold text-dark">{{ StateReturns.StateCd }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted mb-0">Status</div>
+                                <div class="fw-bold text-dark text-truncate" title="{{ StateReturns.Status }}">
+                                    {{ StateReturns.Status }}
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-label fw-500 text-muted mb-0">Status Ts</div>
+                                <div class="fw-bold text-dark text-truncate"
+                                    title="{{ StateReturns.StatusTs if StateReturns.StatusTs else '-' }}">
+                                    {{ StateReturns.StatusTs if StateReturns.StatusTs else '-' }}
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <div class="form-label fw-500 text-muted mb-0">Status Info</div>
+                                <div class="fw-bold text-dark text-truncate" title="{{ StateReturns.Info }}">
+                                    <p>{{ StateReturns.Info }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% endif %}
+
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- {#
+                                        <div class="mb-3 border-top px-4">
+                                            <div class="fs-5 mt-2 mb-2">Federal Return</div>
+                                            {% if fs_res.Form1099Records.SuccessRecords|length and fs_res.Form1099Records.SuccessRecords[0].FederalReturn %}
+                                                {% set content = fs_res.Form1099Records.SuccessRecords[0].FederalReturn %}
+                                                <div class="pb-2 row">
+                                                    <div class="col-4">
+                                                        <div class="form-label fw-500 text-muted  mb-0">Status</div>
+                                                        <div class="fw-bold text-dark">{{ content.Status }}</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="form-label fw-500 text-muted mb-0">StatusTs</div>
+                                                        <div class="fw-bold text-dark">{{ content.StatusTs }}</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="d-flex">
+                                                            <div class="pe-3">
+                                                                <div class="form-label fw-500 text-muted mb-0">Info</div>
+                                                                <div class="fw-bold text-dark">
+                                                                    {% if content.Info %}
+                                                                        <span class="text-center">{{ content.Info }}</span>
+                                                                    {% else %}
+                                                                        <span class="text-center">-</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3 border-top px-4">
+                                            <div class="fs-5 mt-2 mb-2">State Return</div>
+                                            {% if fs_res.Form1099Records.SuccessRecords|length and fs_res.Form1099Records.SuccessRecords[0].StateReturns %}
+                                                {% 
+                                                    set table_sr = {
+                                                        'header': [
+                                                            {'n': 'State Code', 'k': 'StateCd'},
+                                                            {'n': 'Status', 'k': 'Status'},
+                                                            {'n': 'Status Ts', 'k': 'StatusTs'}
+                                                        ],
+                                                        'data': fs_res.Form1099Records.SuccessRecords[0].StateReturns
+                                                    } 
+                                                %}
+                                                {{ table.dom(table_sr.header, table_sr.data)}}
+                                            {% endif %}  
+                                        </div>
+
+                                        <div class="mb-3 border-top px-4">
+                                            <div class="fs-5 mt-2 mb-2">Postal Mailing</div>
+                                            {% if fs_res.Form1099Records.SuccessRecords and fs_res.Form1099Records.SuccessRecords[0].Postal %}
+                                                {% set content = fs_res.Form1099Records.SuccessRecords[0].Postal %}
+                                                <div class="pb-2 row">
+                                                    <div class="col-4">
+                                                        <div class="form-label fw-500 text-muted  mb-0">Status</div>
+                                                        <div class="fw-bold text-dark">{{ content.Status }}</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="form-label fw-500 text-muted mb-0">StatusTs</div>
+                                                        <div class="fw-bold text-dark">{{ content.StatusTs }}</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="d-flex">
+                                                            <div class="pe-3">
+                                                                <div class="form-label fw-500 text-muted mb-0">Info</div>
+                                                                <div class="fw-bold text-dark">
+                                                                    {% if content.Info %}
+                                                                        <span class="text-center">{{ content.Info }}</span>
+                                                                    {% else %}
+                                                                        <span class="text-center">-</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    #} -->
+
+                {% endif %}
+
+            </div>
+
+            {% endif %}
+
+            {% endcall %}
+        </div>
+        {% endif %}
+
+        {% if form_draft_pdf_url_res %}
+
+        {% set fdpu_res = form_draft_pdf_url_res %}
+
+        {% if fdpu_res.DraftPdfUrl and 'pdf_file' in fdpu_res and fdpu_res.pdf_file %}
+
+        {% call popup.simple(title='Request Draft Pdf Preview', show=True, id='draft-pdf-popup', width='1000px') %}
+        <iframe id="draft-pdf"></iframe>
+        {% endcall %}
+
+        <script>
+            $(() => {
+                var byte_array = new Uint8Array({{ fdpu_res.pdf_file | safe }});
+            var blob = new Blob([byte_array], { type: 'application/pdf' });
+            var pdfUrl = URL.createObjectURL(blob);
+
+            const iframe = document.getElementById('draft-pdf');
+            iframe.src = pdfUrl;
+            iframe.style.width = '100%';
+            iframe.style.height = '600px'; 
+                            
+                        })
+        </script>
+
+        {% elif fdpu_res.Error %}
+
+        {% call popup.simple(title='Error Response', show=True, id='draft-pdf-error-popup', width='1000px', top='20%')
+        %}
+        {{ response_show.error_table(fdpu_res.Error) }}
+        {% endcall %}
+
+        {% endif %}
+
+        {% endif %}
+
+        {% if form_pdf_urls_res %}
+
+        {% set fpu_res = form_pdf_urls_res %}
+
+        {% if 'pdf_file' in fpu_res and fpu_res.pdf_file %}
+
+        {% call popup.simple(title='Request Pdf Preview', show=True, id='draft-pdf-popup', width='1000px') %}
+        <iframe id="pdf-masked-url"></iframe>
+        {% endcall %}
+
+        <script>
+            $(() => {
+                var byte_array = new Uint8Array({{ fpu_res.pdf_file | safe }});
+            var blob = new Blob([byte_array], { type: 'application/pdf' });
+            var pdfUrl = URL.createObjectURL(blob);
+
+            const iframe = document.getElementById('pdf-masked-url');
+            iframe.src = pdfUrl;
+            iframe.style.width = '100%';
+            iframe.style.height = '600px'; 
+                        })
+        </script>
+
+        {% endif %}
+
+        {% if 'FormW2GRecords' in fpu_res %}
+
+        {% set SuccessRecords = fpu_res['FormW2GRecords'].SuccessRecords %}
+        {% set ErrorRecords = fpu_res['FormW2GRecords'].ErrorRecords %}
+
+        {% if SuccessRecords %}
+
+        {% call offcanvas.dom(
+        id='form_pdf_urls_res_offcanvase', title='Request PDF Url Response',
+        placement='end', showAtStart=True
+        )
+        %}
+
+        {% for suc_rec in SuccessRecords %}
+        <div class="table-container {% if loop.index>1 %} border-top {% endif %}">
+            <table>
+                <thead>
+                    <th class="text-center fw-600 bg-dull-blue">PDF Copy</th>
+                    <th class="text-center fw-600 bg-dull-blue">PDF URL</th>
+                    <th class="text-center fw-600 bg-dull-blue">Action</th>
+                </thead>
+                <tbody>
+                    {% for Filename, FileUrl in suc_rec.Files.items() %}
+
+                    {%
+                    set get_w2g_url_kwargs = {
+                    'b_id': business_id,
+                    'b_name': business_name,
+                    'b_tin': business_tin,
+                    'sub_id': fpu_res.current_pdf_details.submission_id,
+                    'rec_id': fpu_res.current_pdf_details.record_id
+                    }
+                    %}
+
+                    <tr>
+                        <td class="text-center align-top">{{ Filename }}</td>
+                        <td class="text-center align-top">{{ FileUrl.Masked }}</td>
+                        <td class="text-center align-top">
+                            <form method="POST" action="{{ url('get-w2g', kwargs=get_w2g_url_kwargs) }}">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                <input type="hidden" name="action" value="pdf-url">
+                                <input type="hidden" name="file-url-masked" value="{{FileUrl.Masked}}">
+                                <button class="btn btn-primary status-btn btn_smm">View</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+
+        {% endcall %}
+
+        {% elif ErrorRecords %}
+
+        {% call popup.simple(id='pdf-popup', title='Error Response', show=True, width='1000px', top='25%') %}
+
+        {%
+        set t_headers = [
+        {'n':'RecordId', 'k': 'RecordId'},
+        {'n':'Status', 'k': 'Status'},
+        {'n':'Message', 'k': 'Message'}
+        ]
+        %}
+
+        {{ table.dom(t_headers, ErrorRecords) }}
+
+        {% endcall %}
+
+        {% endif %}
+
+        {% elif fpu_res.Errors %}
+
+        {% call popup.simple(title='Error Response', show=True, id='draft-pdf-popup', width='1000px', top='25%') %}
+        {{ response_show.error_table(fpu_res.Error) }}
+        {% endcall %}
+
+        {% endif %}
+
+        {% endif %}
+
+        {% if form_transmit_res %}
+
+        {{
+        response_show.dom(
+        id = 'formTransmitModalToggle',
+        title = 'Transmit Response',
+        res = form_transmit_res,
+        specific_dict_key = 'FormW2GRecords',
+        sub_title = 'Transmit Records',
+        noStatus = True,
+        width = "1000px",
+        top = "10%"
+        )
+        }}
+
+        {% endif %}
+
+        {% if form_delete_res %}
+
+        {{
+        response_show.dom(
+        id = 'formDeleteModalToggle',
+        title = 'Delete Response',
+        res = form_delete_res,
+        specific_dict_key = 'Form1099Records',
+        sub_title = 'Delete Process',
+        noStatus = True,
+        width = "1000px",
+        top = "10%"
+        )
+        }}
+
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock content %}

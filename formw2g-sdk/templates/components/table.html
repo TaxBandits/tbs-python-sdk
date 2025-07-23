@@ -1,0 +1,24 @@
+{% macro dom(t_header, t_data) %}
+    <div class="table-container m-3">
+        <table>
+            <thead>
+                {% for th in t_header %}
+                    <th class="text-center fw-600 bg-dull-blue">{{ th.n }}</th>
+                {% endfor %}
+            </thead>
+            <tbody>
+                {% for row in t_data %}
+                    <tr>
+                        {% for col in t_header %}
+                            {% if 'td_class' in col and col.td_class %}
+                                <td class="{{col.td_class}}">{{ row[col.k] }}</td>
+                            {% else %}
+                                <td class="text-center align-top">{{ row[col.k] }}</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endmacro %}

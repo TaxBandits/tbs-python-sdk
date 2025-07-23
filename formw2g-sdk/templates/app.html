@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% import 'components/messages.html' as messages %}
+
+{% block app %}
+
+    
+
+    <div class="header text-center mb-3">
+        <img src="{{ static('images/tbsLogo.png') }}" alt="tbsLogo"/>
+    </div>
+
+    {{ messages.dom(request) }}
+    
+
+    {% block content %}
+    {% endblock content %}
+
+{% endblock app %}
